@@ -360,3 +360,27 @@ export async function saveDriveIndex(
     throw err;
   }
 }
+
+/**
+ * Deletes specified message IDs permanently from the Telegram storage channel.
+ */
+export async function deleteTelegramMessages(
+  channelId: string,
+  messageIds: number[]
+): Promise<void> {
+  const uniqueIds = Array.from(new Set(messageIds.map(Number))).filter(
+    (id) => typeof id === "number" && !isNaN(id) && id > 0
+  );
+  if (uniqueIds.length === 0) return;
+
+  try {
+    const client = getClient();
+    const peer = await client.getEntity(channelId);
+    await client.deleteMessages(peer, uniqueIds, { revoke: true });
+    console.log(
+      `[indexStore] Successfully deleted ${uniqueIds.length} message(s) [${uniqueIds.join(", ")}] from Telegram channel ${channelId}`
+    );
+  } catch (err) {
+    console.warn(`[indexStore] Could not delete messages from Telegram channel:`, err);
+  }
+}

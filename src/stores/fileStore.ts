@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { DriveFile, DriveFolder, ViewMode } from "../types";
-import { loadDriveIndex, saveDriveIndex } from "../lib/telegram/indexStore";
+import { loadDriveIndex, saveDriveIndex, deleteTelegramMessages } from "../lib/telegram/indexStore";
 
 interface FileState {
   files: DriveFile[];
@@ -24,6 +24,8 @@ interface FileState {
   moveToTrash: (channelId: string, id: string, isFolder: boolean) => Promise<void>;
   restoreFromTrash: (channelId: string, id: string, isFolder: boolean) => Promise<void>;
   deletePermanently: (channelId: string, id: string, isFolder: boolean) => Promise<void>;
+  deleteMultiplePermanently: (channelId: string, ids: string[]) => Promise<void>;
+  emptyTrash: (channelId: string) => Promise<void>;
 }
 
 export const useFileStore = create<FileState>((set, get) => ({
@@ -193,15 +195,122 @@ export const useFileStore = create<FileState>((set, get) => ({
     const { files, folders } = get();
     let nextFiles = files;
     let nextFolders = folders;
+    const messagesToDelete: number[] = [];
 
     if (isFolder) {
-      nextFolders = folders.filter((f) => f.id !== id);
+      // Find all nested descendant folder IDs
+      const descendantFolderIds = new Set<string>([id]);
+      let added = true;
+      while (added) {
+        added = false;
+        for (const f of folders) {
+          if (f.parentId && descendantFolderIds.has(f.parentId) && !descendantFolderIds.has(f.id)) {
+            descendantFolderIds.add(f.id);
+            added = true;
+          }
+        }
+      }
+
+      // Collect all Telegram message IDs for files in this folder & its subfolders
+      for (const f of files) {
+        if (f.folderId && descendantFolderIds.has(f.folderId)) {
+          if (f.messageId) messagesToDelete.push(f.messageId);
+          if (f.chunkMsgIds) messagesToDelete.push(...f.chunkMsgIds);
+        }
+      }
+
+      nextFolders = folders.filter((f) => !descendantFolderIds.has(f.id));
+      nextFiles = files.filter((f) => !f.folderId || !descendantFolderIds.has(f.folderId));
     } else {
+      const targetFile = files.find((f) => f.id === id);
+      if (targetFile) {
+        if (targetFile.messageId) messagesToDelete.push(targetFile.messageId);
+        if (targetFile.chunkMsgIds) messagesToDelete.push(...targetFile.chunkMsgIds);
+      }
       nextFiles = files.filter((f) => f.id !== id);
     }
 
     set({ files: nextFiles, folders: nextFolders, isSaving: true });
     try {
+      // 1. Delete the file message(s) from Telegram storage channel
+      if (messagesToDelete.length > 0) {
+        await deleteTelegramMessages(channelId, messagesToDelete);
+      }
+      // 2. Persist updated index
+      await saveDriveIndex(channelId, nextFiles, nextFolders);
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+
+  deleteMultiplePermanently: async (channelId: string, ids: string[]) => {
+    const { files, folders } = get();
+    const idSet = new Set(ids);
+    const messagesToDelete: number[] = [];
+
+    // Find all selected folders and their descendant subfolders
+    const descendantFolderIds = new Set<string>();
+    for (const id of ids) {
+      if (folders.some((f) => f.id === id)) {
+        descendantFolderIds.add(id);
+      }
+    }
+
+    let added = true;
+    while (added) {
+      added = false;
+      for (const f of folders) {
+        if (f.parentId && descendantFolderIds.has(f.parentId) && !descendantFolderIds.has(f.id)) {
+          descendantFolderIds.add(f.id);
+          added = true;
+        }
+      }
+    }
+
+    // Collect message IDs for all selected files or files inside selected folders
+    for (const f of files) {
+      if (idSet.has(f.id) || (f.folderId && descendantFolderIds.has(f.folderId))) {
+        if (f.messageId) messagesToDelete.push(f.messageId);
+        if (f.chunkMsgIds) messagesToDelete.push(...f.chunkMsgIds);
+      }
+    }
+
+    const nextFolders = folders.filter(
+      (f) => !idSet.has(f.id) && !descendantFolderIds.has(f.id)
+    );
+    const nextFiles = files.filter(
+      (f) => !idSet.has(f.id) && (!f.folderId || !descendantFolderIds.has(f.folderId))
+    );
+
+    set({ files: nextFiles, folders: nextFolders, isSaving: true });
+    try {
+      if (messagesToDelete.length > 0) {
+        await deleteTelegramMessages(channelId, messagesToDelete);
+      }
+      await saveDriveIndex(channelId, nextFiles, nextFolders);
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+
+  emptyTrash: async (channelId: string) => {
+    const { files, folders } = get();
+    const trashedFiles = files.filter((f) => f.isDeleted);
+    const messagesToDelete: number[] = [];
+
+    for (const f of trashedFiles) {
+      if (f.messageId) messagesToDelete.push(f.messageId);
+      if (f.chunkMsgIds) messagesToDelete.push(...f.chunkMsgIds);
+    }
+
+    const nextFiles = files.filter((f) => !f.isDeleted);
+    const nextFolders = folders.filter((f) => !f.isDeleted);
+
+    set({ files: nextFiles, folders: nextFolders, isSaving: true });
+    try {
+      if (messagesToDelete.length > 0) {
+        await deleteTelegramMessages(channelId, messagesToDelete);
+      }
       await saveDriveIndex(channelId, nextFiles, nextFolders);
     } finally {
       set({ isSaving: false });

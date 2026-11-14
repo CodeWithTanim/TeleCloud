@@ -57,6 +57,8 @@ export const DrivePage: React.FC<DrivePageProps> = ({
     moveToTrash,
     restoreFromTrash,
     deletePermanently,
+    deleteMultiplePermanently,
+    emptyTrash,
     addFile,
   } = useFileStore();
   const { activeChannel } = useAuthStore();
@@ -276,13 +278,13 @@ export const DrivePage: React.FC<DrivePageProps> = ({
 
   const handleDelete = (id: string, isFolder: boolean) => {
     if (!activeChannel.id) return;
-    if (tab === "trash") {
-      if (confirm("Permanently delete this item?")) {
-        deletePermanently(activeChannel.id, id, isFolder);
-      }
-    } else {
-      moveToTrash(activeChannel.id, id, isFolder);
-    }
+    deletePermanently(activeChannel.id, id, isFolder);
+  };
+
+  const handleDeleteSelected = () => {
+    if (!activeChannel.id || selectedIds.length === 0) return;
+    deleteMultiplePermanently(activeChannel.id, selectedIds);
+    setSelectedIds([]);
   };
 
   // Breadcrumbs calculation
@@ -751,8 +753,25 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             )}
           </div>
 
-          {/* View Toggle Capsule (✓ ☰ | ⊞) exactly matching screenshot */}
-          <div className="flex items-center rounded-full bg-[#1e1f20] border border-[#444746]/60 p-0.5">
+          <div className="flex items-center gap-2">
+            {/* Empty Trash Button (when on Trash tab and items exist) */}
+            {tab === "trash" && (filteredFiles.length > 0 || filteredFolders.length > 0) && (
+              <button
+                onClick={() => {
+                  if (activeChannel.id && confirm("Permanently delete all items in trash from Telegram and TeleCloud?")) {
+                    emptyTrash(activeChannel.id);
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 text-xs font-medium transition cursor-pointer"
+                title="Permanently delete all trash from Telegram"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Empty trash</span>
+              </button>
+            )}
+
+            {/* View Toggle Capsule (✓ ☰ | ⊞) exactly matching screenshot */}
+            <div className="flex items-center rounded-full bg-[#1e1f20] border border-[#444746]/60 p-0.5">
             <button
               onClick={() => setViewMode("list")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
@@ -778,6 +797,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             </button>
           </div>
         </div>
+      </div>
 
         {/* Filter Chips row (Type ▾ | People ▾ | Modified ▾ | Source ▾) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
@@ -1037,6 +1057,15 @@ export const DrivePage: React.FC<DrivePageProps> = ({
           <span className="font-medium text-[#7CB8F8]">
             {selectedIds.length} {selectedIds.length === 1 ? "item" : "items"} selected
           </span>
+          <div className="w-px h-3.5 bg-white/10" />
+          <button
+            onClick={handleDeleteSelected}
+            className="flex items-center gap-1.5 text-rose-400 hover:text-rose-300 font-medium transition cursor-pointer"
+            title="Delete selected from Telegram and TeleCloud"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete</span>
+          </button>
           <div className="w-px h-3.5 bg-white/10" />
           <button
             onClick={() => setSelectedIds([])}

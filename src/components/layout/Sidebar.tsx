@@ -32,10 +32,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .filter((f) => !f.isDeleted)
     .reduce((acc, f) => acc + (f.size || 0), 0);
 
-  // Percentage of 400 GB (or custom target)
-  const maxBytes = 400 * 1024 * 1024 * 1024; // 400 GB
-  const usedPercentage = Math.min(100, Math.max(1, (totalUsedBytes / maxBytes) * 100));
-
   const renderNavItem = (
     id: ActiveTab,
     label: string,
@@ -132,19 +128,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Storage Meter at the very bottom */}
+      {/* Storage Meter at the very bottom (Unlimited Telegram Cloud) */}
       <div className="px-3 pt-3">
         {/* Progress bar */}
         <div className="w-full h-1 bg-[#282a2c] rounded-full overflow-hidden mb-2">
           <div
-            className="h-full bg-[#1a73e8] rounded-full transition-all duration-300"
-            style={{ width: `${usedPercentage}%` }}
+            className={`h-full bg-gradient-to-r from-[#2AABEE] to-[#229ED9] rounded-full transition-all duration-300 ${
+              totalUsedBytes > 0 ? "w-2.5" : "w-0"
+            }`}
           />
         </div>
 
-        {/* Storage text matching screenshot */}
-        <p className="text-xs text-[#9aa0a6]">
-          {totalUsedBytes > 0 ? formatBytes(totalUsedBytes) : "966 KB"} of 400 GB used
+        {/* Dynamic storage text reflecting actual files in Telegram */}
+        <p className="text-xs text-[#9aa0a6] select-none">
+          <span className="text-[#e3e3e3] font-normal">{formatBytes(totalUsedBytes)}</span> of Unlimited used
         </p>
       </div>
     </aside>

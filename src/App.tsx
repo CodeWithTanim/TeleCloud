@@ -90,7 +90,11 @@ export const App: React.FC = () => {
               <SettingsPage />
             </div>
           ) : (
-            <DrivePage tab={activeTab} />
+            <DrivePage
+              tab={activeTab}
+              onOpenUpload={() => setIsUploadOpen(true)}
+              onOpenNewFolder={() => setIsNewFolderOpen(true)}
+            />
           )}
         </main>
       </div>

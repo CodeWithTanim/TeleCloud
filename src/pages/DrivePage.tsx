@@ -16,6 +16,9 @@ import {
   Users,
   AlertCircle,
   Cloud,
+  FolderPlus,
+  FileUp,
+  FolderUp,
 } from "lucide-react";
 import { useFileStore } from "../stores/fileStore";
 import { useAuthStore } from "../stores/authStore";
@@ -31,9 +34,15 @@ import { DriveFile, DriveFolder, ActiveTab } from "../types";
 
 interface DrivePageProps {
   tab: ActiveTab;
+  onOpenUpload?: () => void;
+  onOpenNewFolder?: () => void;
 }
 
-export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
+export const DrivePage: React.FC<DrivePageProps> = ({
+  tab,
+  onOpenUpload,
+  onOpenNewFolder,
+}) => {
   const {
     files,
     folders,
@@ -54,6 +63,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
 
   const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [showDriveMenu, setShowDriveMenu] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showModifiedDropdown, setShowModifiedDropdown] = useState(false);
@@ -414,10 +424,69 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
                 </React.Fragment>
               ))
             ) : (
-              <h1 className="text-xl sm:text-[22px] font-normal text-white flex items-center gap-1.5 cursor-pointer hover:bg-white/5 px-2.5 py-1 -ml-2 rounded-xl transition">
-                <span>{getTabTitle()}</span>
-                <ChevronDown className="w-4 h-4 text-[#9aa0a6]" />
-              </h1>
+              <div className="relative">
+                <button
+                  onClick={() => setShowDriveMenu(!showDriveMenu)}
+                  className="text-xl sm:text-[22px] font-normal text-white flex items-center gap-1.5 cursor-pointer hover:bg-white/5 px-2.5 py-1 -ml-2 rounded-xl transition"
+                >
+                  <span>{getTabTitle()}</span>
+                  <ChevronDown className="w-4 h-4 text-[#9aa0a6]" />
+                </button>
+
+                {showDriveMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowDriveMenu(false)}
+                    />
+                    <div className="absolute left-0 top-11 z-50 w-72 bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none">
+                      <button
+                        onClick={() => {
+                          setShowDriveMenu(false);
+                          onOpenNewFolder?.();
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <FolderPlus className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+                          <span className="font-normal text-white">New folder</span>
+                        </div>
+                        <span className="text-xs text-[#9aa0a6] font-mono">Alt+C then F</span>
+                      </button>
+
+                      <div className="my-1.5 border-t border-white/10" />
+
+                      <button
+                        onClick={() => {
+                          setShowDriveMenu(false);
+                          onOpenUpload?.();
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <FileUp className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+                          <span className="font-normal text-white">File upload</span>
+                        </div>
+                        <span className="text-xs text-[#9aa0a6] font-mono">Alt+C then U</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowDriveMenu(false);
+                          onOpenUpload?.();
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <FolderUp className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+                          <span className="font-normal text-white">Folder upload</span>
+                        </div>
+                        <span className="text-xs text-[#9aa0a6] font-mono">Alt+C then I</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
           </div>
 

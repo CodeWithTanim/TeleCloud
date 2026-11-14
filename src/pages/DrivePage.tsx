@@ -79,6 +79,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   const [showCustomRange, setShowCustomRange] = useState(false);
   const [customStartDate, setCustomStartDate] = useState<number | null>(null);
   const [customEndDate, setCustomEndDate] = useState<number | null>(null);
+  const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number } | null>(null);
   const dragCounter = useRef(0);
 
   // Filter items based on tab & folder
@@ -270,6 +271,48 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   const handleTogglePin = (id: string) => {
     if (!activeChannel.id) return;
     togglePinFolder(activeChannel.id, id);
+  };
+
+  useEffect(() => {
+    const handleClose = () => setCanvasContextMenu(null);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setCanvasContextMenu(null);
+    };
+
+    if (canvasContextMenu) {
+      window.addEventListener("click", handleClose);
+      window.addEventListener("scroll", handleClose, true);
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("click", handleClose);
+      window.removeEventListener("scroll", handleClose, true);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [canvasContextMenu]);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (tab === "trash") return;
+    const target = e.target as HTMLElement;
+    // If clicked on an interactive element like a button or input, do not intercept
+    if (target.closest("button") || target.closest("input") || target.closest("select")) {
+      return;
+    }
+    e.preventDefault();
+
+    const menuWidth = 240;
+    const menuHeight = 155;
+    let x = e.clientX;
+    let y = e.clientY;
+
+    if (x + menuWidth > window.innerWidth) {
+      x = Math.max(10, window.innerWidth - menuWidth - 12);
+    }
+    if (y + menuHeight > window.innerHeight) {
+      y = Math.max(10, window.innerHeight - menuHeight - 12);
+    }
+
+    setCanvasContextMenu({ x, y });
   };
 
   const handleEmptyTrash = async () => {
@@ -591,6 +634,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onContextMenu={handleContextMenu}
       className="relative flex-1 flex flex-col h-[calc(100vh-4rem)] mr-3 mb-3 bg-[#131314] rounded-[24px] border border-white/[0.04] overflow-hidden select-none"
     >
       {/* Drag & Drop Visual Overlay */}
@@ -958,6 +1002,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onContextMenu={handleContextMenu}
         className="flex-1 overflow-y-auto px-6 pb-6 relative select-none"
       >
         {/* Trash Banner with Empty Trash option */}
@@ -1116,6 +1161,65 @@ export const DrivePage: React.FC<DrivePageProps> = ({
 
       {/* File Preview Modal */}
       <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
+
+      {/* Right-click Canvas Context Menu */}
+      {canvasContextMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setCanvasContextMenu(null)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setCanvasContextMenu(null);
+            }}
+          />
+          <div
+            style={{
+              position: "fixed",
+              top: `${canvasContextMenu.y}px`,
+              left: `${canvasContextMenu.x}px`,
+              zIndex: 50,
+            }}
+            className="w-60 bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                setCanvasContextMenu(null);
+                onOpenNewFolder?.();
+              }}
+              className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+            >
+              <FolderPlus className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+              <span className="font-normal text-white">New folder</span>
+            </button>
+
+            <div className="my-1.5 border-t border-white/10" />
+
+            <button
+              onClick={() => {
+                setCanvasContextMenu(null);
+                onOpenUpload?.();
+              }}
+              className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+            >
+              <FileUp className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+              <span className="font-normal text-white">File upload</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setCanvasContextMenu(null);
+                onOpenUpload?.();
+              }}
+              className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+            >
+              <FolderUp className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+              <span className="font-normal text-white">Folder upload</span>
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

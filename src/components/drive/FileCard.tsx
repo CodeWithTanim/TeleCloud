@@ -114,6 +114,11 @@ export const FileCard: React.FC<FileCardProps> = ({
     <div
       data-item-id={item.id}
       onClick={handleCardClick}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowMenu(true);
+      }}
       className={`group relative rounded-2xl p-3 transition duration-200 cursor-pointer flex flex-col justify-between overflow-hidden ${
         isSelected
           ? "bg-[#004a77]/35 border border-[#7CB8F8]/60 ring-2 ring-[#7CB8F8]/40 shadow-lg shadow-black/40"

@@ -6,11 +6,15 @@ import {
   FolderPlus,
   Upload,
   FolderUp,
+  Folder,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 import { useFileStore } from "../../stores/fileStore";
 import { formatBytes } from "../../lib/utils/formatters";
 import { ActiveTab } from "../../types";
+import { PinFolderModal } from "../drive/PinFolderModal";
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -25,8 +29,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenUpload,
   onOpenNewFolder,
 }) => {
-  const { files, setCurrentFolderId } = useFileStore();
+  const { files, folders, currentFolderId, setCurrentFolderId, togglePinFolder } = useFileStore();
+  const { activeChannel } = useAuthStore();
   const [showNewMenu, setShowNewMenu] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+
+  const pinnedFolders = folders.filter((f) => !f.isDeleted && f.isPinned);
 
   const totalUsedBytes = files
     .filter((f) => !f.isDeleted)
@@ -38,7 +46,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     icon: React.ReactNode,
     onClickExtra?: () => void
   ) => {
-    const isActive = activeTab === id;
+    const isActive =
+      id === "home"
+        ? activeTab === "home" && currentFolderId === null
+        : activeTab === id;
 
     return (
       <button
@@ -121,9 +132,85 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        {/* Navigation Sections: Home & Trash */}
+        {/* Navigation Sections: Home, Pinned Folders & Trash */}
         <nav className="space-y-1">
           {renderNavItem("home", "Home", <Home className="w-4.5 h-4.5" />, () => setCurrentFolderId(null))}
+
+          {/* Pinned Folders Section */}
+          <div className="pt-2 pb-1">
+            <div className="flex items-center justify-between px-3 py-1 mb-0.5">
+              <span className="text-[11px] font-semibold tracking-wider text-[#9aa0a6] uppercase select-none">
+                Pinned
+              </span>
+              <button
+                onClick={() => setShowPinModal(true)}
+                className="p-1 rounded-md text-[#9aa0a6] hover:text-white hover:bg-white/10 transition cursor-pointer"
+                title="Pin a folder to sidebar"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {pinnedFolders.length === 0 ? (
+              <button
+                onClick={() => setShowPinModal(true)}
+                className="w-full flex items-center gap-2.5 px-3 py-1.5 rounded-full text-xs text-[#75777a] hover:text-[#c4c7c5] hover:bg-[#1a1b1c] transition cursor-pointer group"
+              >
+                <Pin className="w-3.5 h-3.5 group-hover:text-[#7CB8F8] transition" />
+                <span>Pin folders here</span>
+              </button>
+            ) : (
+              <div className="space-y-0.5">
+                {pinnedFolders.map((folder) => {
+                  const isFolderActive =
+                    activeTab === "home" && currentFolderId === folder.id;
+
+                  return (
+                    <div
+                      key={folder.id}
+                      className={`group/pin relative flex items-center justify-between rounded-full text-sm font-medium transition cursor-pointer ${
+                        isFolderActive
+                          ? "bg-[#004a77] text-[#c2e7ff] font-semibold"
+                          : "text-[#c4c7c5] hover:bg-[#1f1f1f] hover:text-[#e3e3e3]"
+                      }`}
+                    >
+                      <button
+                        onClick={() => {
+                          setActiveTab("home");
+                          setCurrentFolderId(folder.id);
+                        }}
+                        className="flex-1 flex items-center gap-3 px-4 py-2 min-w-0 text-left cursor-pointer"
+                        title={folder.name}
+                      >
+                        <Folder
+                          className={`w-4.5 h-4.5 shrink-0 ${
+                            isFolderActive
+                              ? "text-[#c2e7ff] fill-[#c2e7ff]/30"
+                              : "text-amber-400/80 fill-amber-400/20"
+                          }`}
+                        />
+                        <span className="truncate">{folder.name}</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (activeChannel.id) {
+                            togglePinFolder(activeChannel.id, folder.id);
+                          }
+                        }}
+                        className="mr-2 p-1.5 rounded-full text-[#9aa0a6] hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover/pin:opacity-100 transition cursor-pointer shrink-0"
+                        title="Unpin folder from sidebar"
+                      >
+                        <PinOff className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {renderNavItem("trash", "Trash", <Trash2 className="w-4.5 h-4.5" />)}
         </nav>
       </div>
@@ -144,6 +231,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span className="text-[#e3e3e3] font-normal">{formatBytes(totalUsedBytes)}</span> of Unlimited used
         </p>
       </div>
+
+      {/* Pin Folder Modal */}
+      <PinFolderModal
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+      />
     </aside>
   );
 };

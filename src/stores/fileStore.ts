@@ -17,7 +17,8 @@ interface FileState {
   setViewMode: (mode: ViewMode) => void;
 
   loadIndex: (channelId: string) => Promise<void>;
-  createFolder: (channelId: string, name: string) => Promise<DriveFolder>;
+  createFolder: (channelId: string, name: string, isPinned?: boolean) => Promise<DriveFolder>;
+  togglePinFolder: (channelId: string, folderId: string) => Promise<void>;
   addFile: (channelId: string, file: DriveFile) => Promise<void>;
   renameItem: (channelId: string, id: string, newName: string, isFolder: boolean) => Promise<void>;
   toggleStar: (channelId: string, id: string, isFolder: boolean) => Promise<void>;
@@ -59,7 +60,7 @@ export const useFileStore = create<FileState>((set, get) => ({
     }
   },
 
-  createFolder: async (channelId: string, name: string) => {
+  createFolder: async (channelId: string, name: string, isPinned = false) => {
     const { folders, files, currentFolderId } = get();
     const newFolder: DriveFolder = {
       id: `folder_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -69,6 +70,7 @@ export const useFileStore = create<FileState>((set, get) => ({
       updatedAt: Date.now(),
       isStarred: false,
       isDeleted: false,
+      isPinned: Boolean(isPinned),
     };
 
     const nextFolders = [...folders, newFolder];
@@ -83,6 +85,25 @@ export const useFileStore = create<FileState>((set, get) => ({
     }
 
     return newFolder;
+  },
+
+  togglePinFolder: async (channelId: string, folderId: string) => {
+    const { folders, files } = get();
+    const nextFolders = folders.map((f) =>
+      f.id === folderId ? { ...f, isPinned: !f.isPinned, updatedAt: Date.now() } : f
+    );
+    set({ folders: nextFolders });
+
+    if (channelId) {
+      set({ isSaving: true });
+      try {
+        await saveDriveIndex(channelId, files, nextFolders);
+      } catch (err: any) {
+        console.warn("[fileStore] togglePinFolder save error:", err);
+      } finally {
+        set({ isSaving: false });
+      }
+    }
   },
 
   addFile: async (channelId: string, file: DriveFile) => {

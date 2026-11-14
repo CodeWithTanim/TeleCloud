@@ -14,6 +14,8 @@ import {
   Trash2,
   Edit2,
   RotateCcw,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { DriveFile, DriveFolder } from "../../types";
 import { formatBytes, formatDate, getFileCategory } from "../../lib/utils/formatters";
@@ -30,6 +32,7 @@ interface FileCardProps {
   onRename: (id: string, name: string, isFolder: boolean) => void;
   onDelete: (id: string, isFolder: boolean) => void;
   onRestore?: (id: string, isFolder: boolean) => void;
+  onTogglePin?: (folderId: string) => void;
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
@@ -43,6 +46,7 @@ export const FileCard: React.FC<FileCardProps> = ({
   onRename,
   onDelete,
   onRestore,
+  onTogglePin,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -116,11 +120,20 @@ export const FileCard: React.FC<FileCardProps> = ({
           : "bg-[#1e1f20] hover:bg-[#282a2c] border border-white/[0.04] hover:border-white/[0.12] hover:shadow-lg"
       }`}
     >
-      {/* Top action buttons (Star & Menu) */}
+      {/* Top action buttons (Pin, Star & Menu) */}
       <div
         className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1"
         onClick={(e) => e.stopPropagation()}
       >
+        {isFolder && folder?.isPinned && !item.isDeleted && (
+          <div
+            className="p-1.5 rounded-lg text-[#7CB8F8] bg-black/60 backdrop-blur-md"
+            title="Pinned to sidebar"
+          >
+            <Pin className="w-3.5 h-3.5 fill-[#7CB8F8]/40" />
+          </div>
+        )}
+
         <button
           onClick={() => onToggleStar(item.id, isFolder)}
           className={`p-1.5 rounded-lg transition backdrop-blur-md ${
@@ -157,6 +170,27 @@ export const FileCard: React.FC<FileCardProps> = ({
                     className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left transition"
                   >
                     <Download className="w-3.5 h-3.5" /> Download
+                  </button>
+                )}
+                {isFolder && onTogglePin && !item.isDeleted && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onTogglePin(item.id);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left transition cursor-pointer"
+                  >
+                    {(item as DriveFolder).isPinned ? (
+                      <>
+                        <PinOff className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Unpin from sidebar</span>
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="w-3.5 h-3.5 text-[#9aa0a6]" />
+                        <span>Pin to sidebar</span>
+                      </>
+                    )}
                   </button>
                 )}
                 <button

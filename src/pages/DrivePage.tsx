@@ -21,6 +21,8 @@ import {
   FileUp,
   FolderUp,
   RotateCcw,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { useFileStore } from "../stores/fileStore";
 import { useAuthStore } from "../stores/authStore";
@@ -60,6 +62,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
     deletePermanently,
     deleteMultiplePermanently,
     emptyTrash,
+    togglePinFolder,
     addFile,
   } = useFileStore();
   const { activeChannel } = useAuthStore();
@@ -262,6 +265,11 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   const handleRestore = (id: string, isFolder: boolean) => {
     if (!activeChannel.id) return;
     restoreFromTrash(activeChannel.id, id, isFolder);
+  };
+
+  const handleTogglePin = (id: string) => {
+    if (!activeChannel.id) return;
+    togglePinFolder(activeChannel.id, id);
   };
 
   const handleEmptyTrash = async () => {
@@ -1015,6 +1023,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onRename={handleRename}
             onDelete={handleDelete}
             onRestore={handleRestore}
+            onTogglePin={handleTogglePin}
           />
         ) : (
           <FileList
@@ -1028,6 +1037,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onRename={handleRename}
             onDelete={handleDelete}
             onRestore={handleRestore}
+            onTogglePin={handleTogglePin}
           />
         )}
       </div>
@@ -1055,6 +1065,34 @@ export const DrivePage: React.FC<DrivePageProps> = ({
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Restore</span>
               </button>
+              <div className="w-px h-3.5 bg-white/10" />
+            </>
+          )}
+          {tab !== "trash" && selectedIds.length === 1 && folders.some((f) => f.id === selectedIds[0]) && (
+            <>
+              {(() => {
+                const f = folders.find((item) => item.id === selectedIds[0]);
+                if (!f) return null;
+                return (
+                  <button
+                    onClick={() => handleTogglePin(f.id)}
+                    className="flex items-center gap-1.5 text-[#7CB8F8] hover:text-[#c2e7ff] font-medium transition cursor-pointer"
+                    title={f.isPinned ? "Unpin folder from sidebar" : "Pin folder to sidebar"}
+                  >
+                    {f.isPinned ? (
+                      <>
+                        <PinOff className="w-3.5 h-3.5" />
+                        <span>Unpin</span>
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="w-3.5 h-3.5" />
+                        <span>Pin to sidebar</span>
+                      </>
+                    )}
+                  </button>
+                );
+              })()}
               <div className="w-px h-3.5 bg-white/10" />
             </>
           )}

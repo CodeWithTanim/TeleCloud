@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FolderPlus } from "lucide-react";
+import { FolderPlus, Pin } from "lucide-react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
 import { useAuthStore } from "../../stores/authStore";
@@ -14,6 +14,7 @@ export const NewFolderModal: React.FC<NewFolderModalProps> = ({ isOpen, onClose 
   const { activeChannel } = useAuthStore();
   const { createFolder } = useFileStore();
   const [folderName, setFolderName] = useState("");
+  const [pinToSidebar, setPinToSidebar] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,8 +23,9 @@ export const NewFolderModal: React.FC<NewFolderModalProps> = ({ isOpen, onClose 
 
     setIsCreating(true);
     try {
-      await createFolder(activeChannel.id, folderName.trim());
+      await createFolder(activeChannel.id, folderName.trim(), pinToSidebar);
       setFolderName("");
+      setPinToSidebar(false);
       onClose();
     } catch (err) {
       console.error("[NewFolder] Create folder error:", err);
@@ -41,13 +43,24 @@ export const NewFolderModal: React.FC<NewFolderModalProps> = ({ isOpen, onClose 
           </label>
           <input
             type="text"
-            placeholder="e.g. Work Documents"
+            placeholder="e.g. Python, NextJs"
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition"
             autoFocus
           />
         </div>
+
+        <label className="flex items-center gap-2 text-xs text-[#c4c7c5] hover:text-white cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={pinToSidebar}
+            onChange={(e) => setPinToSidebar(e.target.checked)}
+            className="rounded border-[#444746] bg-[#1e1f20] text-[#7CB8F8] focus:ring-0 cursor-pointer"
+          />
+          <Pin className="w-3.5 h-3.5 text-sky-400" />
+          <span>Pin to sidebar for quick access</span>
+        </label>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
           <Button variant="ghost" type="button" onClick={onClose} disabled={isCreating}>

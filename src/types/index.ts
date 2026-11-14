@@ -29,6 +29,7 @@ export interface DriveFolder {
   updatedAt: number;
   isStarred?: boolean;
   isDeleted?: boolean;
+  isPinned?: boolean;
 }
 
 export interface DriveFile {

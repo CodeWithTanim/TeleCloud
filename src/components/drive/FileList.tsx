@@ -13,6 +13,8 @@ import {
   FileCode,
   FileText,
   RotateCcw,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { DriveFile, DriveFolder } from "../../types";
 import { formatBytes, formatDate, getFileCategory } from "../../lib/utils/formatters";
@@ -28,6 +30,7 @@ interface FileListProps {
   onRename: (id: string, name: string, isFolder: boolean) => void;
   onDelete: (id: string, isFolder: boolean) => void;
   onRestore?: (id: string, isFolder: boolean) => void;
+  onTogglePin?: (folderId: string) => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({
@@ -41,6 +44,7 @@ export const FileList: React.FC<FileListProps> = ({
   onRename,
   onDelete,
   onRestore,
+  onTogglePin,
 }) => {
   const getIcon = (item: DriveFile | DriveFolder, isFolder: boolean) => {
     if (isFolder) return <Folder className="w-5 h-5 text-[#9aa0a6] fill-[#9aa0a6]/20" />;
@@ -141,6 +145,19 @@ export const FileList: React.FC<FileListProps> = ({
                 </>
               ) : (
                 <>
+                  {onTogglePin && (
+                    <button
+                      onClick={() => onTogglePin(f.id)}
+                      className={`p-1.5 rounded-full transition cursor-pointer ${
+                        f.isPinned
+                          ? "text-[#7CB8F8] opacity-100"
+                          : "text-[#9aa0a6] hover:text-white opacity-0 group-hover:opacity-100"
+                      }`}
+                      title={f.isPinned ? "Unpin from sidebar" : "Pin to sidebar"}
+                    >
+                      <Pin className={`w-3.5 h-3.5 ${f.isPinned ? "fill-[#7CB8F8]/40" : ""}`} />
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       const newName = prompt("Rename folder:", f.name);

@@ -1,13 +1,32 @@
 import React, { useState, useRef } from "react";
-import { ChevronRight, Star, Clock, Trash2, UploadCloud } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Star,
+  Clock,
+  Trash2,
+  UploadCloud,
+  Check,
+  List,
+  LayoutGrid,
+  HardDrive,
+  Home,
+  FolderKanban,
+  Laptop,
+  Users,
+  AlertCircle,
+  Cloud,
+} from "lucide-react";
 import { useFileStore } from "../stores/fileStore";
 import { useAuthStore } from "../stores/authStore";
 import { useTransferStore } from "../stores/transferStore";
 import { FileGrid } from "../components/drive/FileGrid";
 import { FileList } from "../components/drive/FileList";
 import { FilePreviewModal } from "../components/drive/FilePreviewModal";
+import { DriveEmptyIllustration } from "../components/drive/DriveEmptyIllustration";
 import { triggerFileDownload } from "../lib/telegram/downloader";
 import { uploadFileToChannel } from "../lib/telegram/uploader";
+import { getFileCategory } from "../lib/utils/formatters";
 import { DriveFile, DriveFolder, ActiveTab } from "../types";
 
 interface DrivePageProps {
@@ -21,6 +40,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
     currentFolderId,
     setCurrentFolderId,
     viewMode,
+    setViewMode,
     searchQuery,
     toggleStar,
     renameItem,
@@ -34,6 +54,10 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
 
   const [previewFile, setPreviewFile] = useState<DriveFile | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [showModifiedDropdown, setShowModifiedDropdown] = useState(false);
+  const [modifiedFilter, setModifiedFilter] = useState<string>("all");
   const dragCounter = useRef(0);
 
   // Filter items based on tab & folder
@@ -41,32 +65,65 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
   let filteredFiles: DriveFile[] = files;
 
   if (tab === "starred") {
-    filteredFolders = folders.filter((f: DriveFolder) => f.isStarred && !f.isDeleted);
-    filteredFiles = files.filter((f: DriveFile) => f.isStarred && !f.isDeleted);
+    filteredFolders = folders.filter((f) => f.isStarred && !f.isDeleted);
+    filteredFiles = files.filter((f) => f.isStarred && !f.isDeleted);
   } else if (tab === "trash") {
-    filteredFolders = folders.filter((f: DriveFolder) => f.isDeleted);
-    filteredFiles = files.filter((f: DriveFile) => f.isDeleted);
+    filteredFolders = folders.filter((f) => f.isDeleted);
+    filteredFiles = files.filter((f) => f.isDeleted);
   } else if (tab === "recent") {
     filteredFolders = [];
     filteredFiles = [...files]
-      .filter((f: DriveFile) => !f.isDeleted)
-      .sort((a: DriveFile, b: DriveFile) => b.uploadedAt - a.uploadedAt)
-      .slice(0, 30);
+      .filter((f) => !f.isDeleted)
+      .sort((a, b) => b.uploadedAt - a.uploadedAt)
+      .slice(0, 40);
+  } else if (tab === "home") {
+    filteredFolders = folders.filter((f) => !f.isDeleted).slice(0, 6);
+    filteredFiles = [...files]
+      .filter((f) => !f.isDeleted)
+      .sort((a, b) => b.uploadedAt - a.uploadedAt);
+  } else if (tab === "projects" || tab === "computers" || tab === "shared" || tab === "spam") {
+    filteredFolders = [];
+    filteredFiles = [];
+  } else if (tab === "storage") {
+    filteredFolders = [];
+    filteredFiles = files.filter((f) => !f.isDeleted).sort((a, b) => b.size - a.size);
   } else {
     // Normal "drive" tab: filter by active folder & non-deleted
     filteredFolders = folders.filter(
-      (f: DriveFolder) => f.parentId === currentFolderId && !f.isDeleted
+      (f) => f.parentId === currentFolderId && !f.isDeleted
     );
     filteredFiles = files.filter(
-      (f: DriveFile) => f.folderId === currentFolderId && !f.isDeleted
+      (f) => f.folderId === currentFolderId && !f.isDeleted
     );
+  }
+
+  // Type filter chip
+  if (selectedType !== "all") {
+    filteredFolders = [];
+    filteredFiles = filteredFiles.filter((f) => {
+      const cat = getFileCategory(f.mimeType, f.name);
+      return cat === selectedType;
+    });
+  }
+
+  // Modified filter chip
+  if (modifiedFilter !== "all") {
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    if (modifiedFilter === "today") {
+      filteredFiles = filteredFiles.filter((f) => now - f.uploadedAt <= oneDay);
+    } else if (modifiedFilter === "week") {
+      filteredFiles = filteredFiles.filter((f) => now - f.uploadedAt <= 7 * oneDay);
+    } else if (modifiedFilter === "month") {
+      filteredFiles = filteredFiles.filter((f) => now - f.uploadedAt <= 30 * oneDay);
+    }
   }
 
   // Search filter
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
-    filteredFolders = filteredFolders.filter((f: DriveFolder) => f.name.toLowerCase().includes(q));
-    filteredFiles = filteredFiles.filter((f: DriveFile) => f.name.toLowerCase().includes(q));
+    filteredFolders = filteredFolders.filter((f) => f.name.toLowerCase().includes(q));
+    filteredFiles = filteredFiles.filter((f) => f.name.toLowerCase().includes(q));
   }
 
   // Drag and Drop upload handlers
@@ -160,16 +217,45 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
 
   // Breadcrumbs calculation
   const breadcrumbs: { id: string | null; name: string }[] = [{ id: null, name: "My Drive" }];
-  const currentFolder = folders.find((f: DriveFolder) => f.id === currentFolderId);
+  const currentFolder = folders.find((f) => f.id === currentFolderId);
   if (currentFolderId && tab === "drive") {
     let curr = currentFolder;
     const trail: { id: string; name: string }[] = [];
     while (curr) {
       trail.unshift({ id: curr.id, name: curr.name });
-      curr = folders.find((f: DriveFolder) => f.id === curr?.parentId);
+      curr = folders.find((f) => f.id === curr?.parentId);
     }
     breadcrumbs.push(...trail);
   }
+
+  const getTabTitle = () => {
+    switch (tab) {
+      case "home":
+        return "Home";
+      case "projects":
+        return "Projects";
+      case "drive":
+        return currentFolder ? currentFolder.name : "My Drive";
+      case "computers":
+        return "Computers";
+      case "shared":
+        return "Shared with me";
+      case "recent":
+        return "Recent";
+      case "starred":
+        return "Starred";
+      case "spam":
+        return "Spam";
+      case "trash":
+        return "Trash";
+      case "storage":
+        return "Storage";
+      default:
+        return "Drive";
+    }
+  };
+
+  const isEmpty = filteredFolders.length === 0 && filteredFiles.length === 0;
 
   return (
     <div
@@ -177,81 +263,242 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className="relative flex-1 overflow-y-auto p-6"
+      className="relative flex-1 flex flex-col h-[calc(100vh-4rem)] mr-3 mb-3 bg-[#131314] rounded-[24px] border border-white/[0.04] overflow-hidden select-none"
     >
       {/* Drag & Drop Visual Overlay */}
       {isDraggingOver && (
-        <div className="absolute inset-0 z-50 bg-indigo-950/85 backdrop-blur-md border-2 border-dashed border-indigo-400 rounded-3xl m-4 flex flex-col items-center justify-center pointer-events-none animate-in fade-in zoom-in-95 duration-200">
-          <div className="w-20 h-20 rounded-3xl bg-indigo-600/30 border border-indigo-400/50 flex items-center justify-center text-indigo-300 shadow-2xl shadow-indigo-500/40 mb-4 animate-bounce">
+        <div className="absolute inset-0 z-50 bg-[#004a77]/80 backdrop-blur-md border-2 border-dashed border-[#7CB8F8] rounded-[24px] m-2 flex flex-col items-center justify-center pointer-events-none animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-20 h-20 rounded-3xl bg-[#004a77] border border-[#7CB8F8]/50 flex items-center justify-center text-[#c2e7ff] shadow-2xl mb-4 animate-bounce">
             <UploadCloud className="w-10 h-10" />
           </div>
-          <h3 className="text-xl font-bold text-white tracking-tight">Drop files to upload</h3>
-          <p className="text-sm text-indigo-200 mt-1">
-            Uploading directly to:{" "}
+          <h3 className="text-xl font-medium text-white tracking-tight">Drop files to upload</h3>
+          <p className="text-sm text-[#c2e7ff] mt-1">
+            Uploading to:{" "}
             <span className="font-semibold text-white">
-              {currentFolder ? currentFolder.name : "My Drive (Root)"}
+              {currentFolder ? currentFolder.name : "My Drive"}
             </span>
           </p>
-          <p className="text-xs text-indigo-300/70 mt-2">
-            Files will be stored securely in your Telegram storage channel
+          <p className="text-xs text-[#9aa0a6] mt-2">
+            Files stored in your connected Telegram cloud storage
           </p>
         </div>
       )}
 
-      {/* Title / Breadcrumb navigation */}
-      <div className="flex items-center gap-2 mb-6 text-sm">
-        {tab === "drive" ? (
+      {/* Workspace Header: Title & View Switcher */}
+      <div className="px-6 pt-5 pb-3 shrink-0">
+        <div className="flex items-center justify-between mb-3">
+          {/* Breadcrumbs or Page Title */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            {breadcrumbs.map((b, i) => (
-              <React.Fragment key={b.id || "root"}>
-                {i > 0 && <ChevronRight className="w-4 h-4 text-slate-600" />}
-                <button
-                  onClick={() => setCurrentFolderId(b.id)}
-                  className={`px-2 py-1 rounded-lg transition font-medium ${
-                    i === breadcrumbs.length - 1
-                      ? "text-white bg-slate-900 border border-slate-800"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  {b.name}
-                </button>
-              </React.Fragment>
-            ))}
+            {tab === "drive" && breadcrumbs.length > 1 ? (
+              breadcrumbs.map((b, i) => (
+                <React.Fragment key={b.id || "root"}>
+                  {i > 0 && <ChevronRight className="w-4 h-4 text-[#9aa0a6]" />}
+                  <button
+                    onClick={() => setCurrentFolderId(b.id)}
+                    className={`flex items-center gap-1 text-lg sm:text-xl font-normal transition rounded-xl px-2 py-1 -ml-1 ${
+                      i === breadcrumbs.length - 1
+                        ? "text-white hover:bg-white/5"
+                        : "text-[#9aa0a6] hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <span>{b.name}</span>
+                    {i === breadcrumbs.length - 1 && (
+                      <ChevronDown className="w-4 h-4 text-[#9aa0a6]" />
+                    )}
+                  </button>
+                </React.Fragment>
+              ))
+            ) : (
+              <h1 className="text-xl sm:text-[22px] font-normal text-white flex items-center gap-1.5 cursor-pointer hover:bg-white/5 px-2.5 py-1 -ml-2 rounded-xl transition">
+                <span>{getTabTitle()}</span>
+                <ChevronDown className="w-4 h-4 text-[#9aa0a6]" />
+              </h1>
+            )}
           </div>
-        ) : (
-          <div className="flex items-center gap-2 text-lg font-bold text-white capitalize">
-            {tab === "starred" && <Star className="w-5 h-5 text-amber-400 fill-amber-400" />}
-            {tab === "recent" && <Clock className="w-5 h-5 text-indigo-400" />}
-            {tab === "trash" && <Trash2 className="w-5 h-5 text-rose-400" />}
-            <span>{tab}</span>
+
+          {/* View Toggle Capsule (✓ ☰ | ⊞) exactly matching screenshot */}
+          <div className="flex items-center rounded-full bg-[#1e1f20] border border-[#444746]/60 p-0.5">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+                viewMode === "list"
+                  ? "bg-[#004a77] text-[#c2e7ff] font-semibold"
+                  : "text-[#9aa0a6] hover:text-[#e3e3e3]"
+              }`}
+              title="List view"
+            >
+              {viewMode === "list" && <Check className="w-3.5 h-3.5" />}
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`p-1.5 rounded-full transition cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-[#004a77] text-[#c2e7ff]"
+                  : "text-[#9aa0a6] hover:text-[#e3e3e3]"
+              }`}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* Filter Chips row (Type ▾ | People ▾ | Modified ▾ | Source ▾) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          {/* Type Filter */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowTypeDropdown(!showTypeDropdown);
+                setShowModifiedDropdown(false);
+              }}
+              className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition cursor-pointer font-medium ${
+                selectedType !== "all"
+                  ? "bg-[#004a77] text-[#c2e7ff] border-[#7CB8F8]/40"
+                  : "border-[#444746] hover:bg-[#282a2c] text-[#e3e3e3]"
+              }`}
+            >
+              <span>{selectedType === "all" ? "Type" : `Type: ${selectedType}`}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#9aa0a6]" />
+            </button>
+
+            {showTypeDropdown && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowTypeDropdown(false)}
+                />
+                <div className="absolute left-0 top-9 z-40 w-44 bg-[#1e1f20] border border-[#444746] rounded-xl shadow-xl py-1 text-xs text-[#e3e3e3]">
+                  {[
+                    { id: "all", label: "All types" },
+                    { id: "pdf", label: "PDFs" },
+                    { id: "image", label: "Photos & images" },
+                    { id: "document", label: "Documents" },
+                    { id: "spreadsheet", label: "Spreadsheets" },
+                    { id: "video", label: "Videos" },
+                    { id: "audio", label: "Audio" },
+                    { id: "archive", label: "Archives" },
+                    { id: "code", label: "Code" },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setSelectedType(t.id);
+                        setShowTypeDropdown(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2 hover:bg-white/10 flex items-center justify-between transition ${
+                        selectedType === t.id ? "text-[#7CB8F8] font-semibold" : ""
+                      }`}
+                    >
+                      <span>{t.label}</span>
+                      {selectedType === t.id && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* People Filter */}
+          <button
+            className="px-3 py-1.5 rounded-lg border border-[#444746] hover:bg-[#282a2c] text-[#e3e3e3] flex items-center gap-1.5 transition cursor-pointer font-medium"
+            title="Filter by person"
+          >
+            <span>People</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#9aa0a6]" />
+          </button>
+
+          {/* Modified Filter */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowModifiedDropdown(!showModifiedDropdown);
+                setShowTypeDropdown(false);
+              }}
+              className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition cursor-pointer font-medium ${
+                modifiedFilter !== "all"
+                  ? "bg-[#004a77] text-[#c2e7ff] border-[#7CB8F8]/40"
+                  : "border-[#444746] hover:bg-[#282a2c] text-[#e3e3e3]"
+              }`}
+            >
+              <span>{modifiedFilter === "all" ? "Modified" : `Modified: ${modifiedFilter}`}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#9aa0a6]" />
+            </button>
+
+            {showModifiedDropdown && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowModifiedDropdown(false)}
+                />
+                <div className="absolute left-0 top-9 z-40 w-44 bg-[#1e1f20] border border-[#444746] rounded-xl shadow-xl py-1 text-xs text-[#e3e3e3]">
+                  {[
+                    { id: "all", label: "All time" },
+                    { id: "today", label: "Today" },
+                    { id: "week", label: "Last 7 days" },
+                    { id: "month", label: "Last 30 days" },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        setModifiedFilter(m.id);
+                        setShowModifiedDropdown(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2 hover:bg-white/10 flex items-center justify-between transition ${
+                        modifiedFilter === m.id ? "text-[#7CB8F8] font-semibold" : ""
+                      }`}
+                    >
+                      <span>{m.label}</span>
+                      {modifiedFilter === m.id && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Source Filter */}
+          <button
+            className="px-3 py-1.5 rounded-lg border border-[#444746] hover:bg-[#282a2c] text-[#e3e3e3] flex items-center gap-1.5 transition cursor-pointer font-medium"
+            title="Filter by storage channel"
+          >
+            <span>Source</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#9aa0a6]" />
+          </button>
+        </div>
       </div>
 
-      {/* Main Views */}
-      {viewMode === "grid" ? (
-        <FileGrid
-          folders={filteredFolders}
-          files={filteredFiles}
-          onOpenFolder={(id: string) => setCurrentFolderId(id)}
-          onPreview={(f: DriveFile) => setPreviewFile(f)}
-          onDownload={handleDownload}
-          onToggleStar={handleToggleStar}
-          onRename={handleRename}
-          onDelete={handleDelete}
-        />
-      ) : (
-        <FileList
-          folders={filteredFolders}
-          files={filteredFiles}
-          onOpenFolder={(id: string) => setCurrentFolderId(id)}
-          onPreview={(f: DriveFile) => setPreviewFile(f)}
-          onDownload={handleDownload}
-          onToggleStar={handleToggleStar}
-          onRename={handleRename}
-          onDelete={handleDelete}
-        />
-      )}
+      {/* Main Workspace Body */}
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
+        {isEmpty ? (
+          <div className="h-full flex items-center justify-center min-h-[50vh]">
+            <DriveEmptyIllustration />
+          </div>
+        ) : viewMode === "grid" ? (
+          <FileGrid
+            folders={filteredFolders}
+            files={filteredFiles}
+            onOpenFolder={(id: string) => setCurrentFolderId(id)}
+            onPreview={(f: DriveFile) => setPreviewFile(f)}
+            onDownload={handleDownload}
+            onToggleStar={handleToggleStar}
+            onRename={handleRename}
+            onDelete={handleDelete}
+          />
+        ) : (
+          <FileList
+            folders={filteredFolders}
+            files={filteredFiles}
+            onOpenFolder={(id: string) => setCurrentFolderId(id)}
+            onPreview={(f: DriveFile) => setPreviewFile(f)}
+            onDownload={handleDownload}
+            onToggleStar={handleToggleStar}
+            onRename={handleRename}
+            onDelete={handleDelete}
+          />
+        )}
+      </div>
 
       {/* File Preview Modal */}
       <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />

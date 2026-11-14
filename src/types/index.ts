@@ -61,4 +61,15 @@ export interface TransferItem {
 
 export type ViewMode = 'grid' | 'list';
 
-export type ActiveTab = 'drive' | 'starred' | 'recent' | 'trash' | 'settings';
+export type ActiveTab =
+  | 'home'
+  | 'projects'
+  | 'drive'
+  | 'computers'
+  | 'shared'
+  | 'recent'
+  | 'starred'
+  | 'spam'
+  | 'trash'
+  | 'storage'
+  | 'settings';

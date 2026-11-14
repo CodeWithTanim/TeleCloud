@@ -1,74 +1,101 @@
-import React from "react";
-import { Search, LayoutGrid, List, RefreshCw } from "lucide-react";
+import React, { useState } from "react";
+import { Search, SlidersHorizontal, Settings, RefreshCw, CheckCircle2, User } from "lucide-react";
+import { GoogleDriveLogo } from "../common/GoogleDriveLogo";
 import { useFileStore } from "../../stores/fileStore";
 import { useAuthStore } from "../../stores/authStore";
 
 interface HeaderProps {
   onRefresh: () => void;
+  onOpenSettings: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onRefresh }) => {
-  const { searchQuery, setSearchQuery, viewMode, setViewMode, isLoading, isSaving } =
-    useFileStore();
-  const { activeChannel } = useAuthStore();
+export const Header: React.FC<HeaderProps> = ({ onRefresh, onOpenSettings }) => {
+  const { searchQuery, setSearchQuery, isSaving, isLoading } = useFileStore();
+  const { user, activeChannel } = useAuthStore();
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   return (
-    <header className="h-16 px-6 bg-[#0a0b0d]/90 backdrop-blur-md border-b border-white/[0.06] flex items-center justify-between shrink-0 gap-4 select-none">
-      {/* Search Input */}
-      <div className="relative w-96 max-w-full">
-        <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-neutral-500" />
-        <input
-          type="text"
-          placeholder="Search files and folders..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-10 pl-10 pr-4 bg-[#141517] border border-white/[0.08] hover:border-white/[0.14] focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 rounded-full text-xs sm:text-sm text-white placeholder-neutral-500 outline-none transition"
-        />
+    <header className="h-16 px-4 sm:px-6 bg-[#0E0E0E] flex items-center justify-between shrink-0 gap-4 select-none border-b border-transparent">
+      {/* Left: Brand Logo & Title */}
+      <div className="flex items-center min-w-[240px]">
+        <GoogleDriveLogo size="md" showText={true} />
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-3">
-        {/* Sync / Saving indicator */}
+      {/* Middle: Google Drive Search Bar */}
+      <div className="flex-1 max-w-2xl relative">
+        <div
+          className={`w-full h-12 rounded-full transition-all duration-200 flex items-center px-4 gap-3 ${
+            isSearchFocused
+              ? "bg-[#282a2c] shadow-[0_1px_3px_0_rgba(0,0,0,0.4)] ring-1 ring-white/10"
+              : "bg-[#282a2c] hover:bg-[#333537]"
+          }`}
+        >
+          <Search className="w-5 h-5 text-[#9aa0a6] shrink-0" />
+          <input
+            type="text"
+            placeholder="Search in Drive"
+            value={searchQuery}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent text-sm text-[#e3e3e3] placeholder-[#9aa0a6] outline-none"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="text-[#9aa0a6] hover:text-white text-xs px-1"
+            >
+              ✕
+            </button>
+          )}
+          <button
+            title="Search options"
+            className="p-1 text-[#9aa0a6] hover:text-white rounded-full transition cursor-pointer shrink-0"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Right: Actions & User Avatar */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Sync/Saving Indicator */}
         {isSaving && (
-          <span className="flex items-center gap-1.5 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
-            <RefreshCw className="w-3 h-3 animate-spin" /> Saving Index...
+          <span className="hidden sm:flex items-center gap-1 text-xs text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+            <RefreshCw className="w-3 h-3 animate-spin" /> Syncing...
           </span>
         )}
 
-        {/* Refresh button */}
+        {/* Refresh Button */}
         <button
           onClick={onRefresh}
           disabled={isLoading}
-          className="p-2 text-neutral-400 hover:text-white rounded-full hover:bg-white/[0.06] border border-white/[0.08] transition cursor-pointer"
-          title="Reload Drive"
+          className="p-2.5 text-[#c4c7c5] hover:text-white hover:bg-[#282a2c] rounded-full transition cursor-pointer"
+          title="Refresh Drive"
         >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-[#A8C7FA]" : ""}`} />
+          <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin text-[#7CB8F8]" : ""}`} />
         </button>
 
-        {/* View Switcher */}
-        <div className="flex items-center bg-[#141517] border border-white/[0.08] rounded-full p-1">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`p-1.5 rounded-full transition cursor-pointer ${
-              viewMode === "grid"
-                ? "bg-[#2C2D30] text-white shadow-xs"
-                : "text-neutral-400 hover:text-white"
-            }`}
-            title="Grid view"
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={`p-1.5 rounded-full transition cursor-pointer ${
-              viewMode === "list"
-                ? "bg-[#2C2D30] text-white shadow-xs"
-                : "text-neutral-400 hover:text-white"
-            }`}
-            title="List view"
-          >
-            <List className="w-4 h-4" />
-          </button>
+        {/* Settings Gear */}
+        <button
+          onClick={onOpenSettings}
+          className="p-2.5 text-[#c4c7c5] hover:text-white hover:bg-[#282a2c] rounded-full transition cursor-pointer"
+          title="Settings"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+
+        {/* Profile Avatar */}
+        <div
+          onClick={onOpenSettings}
+          className="w-9 h-9 rounded-full bg-[#37393b] border border-white/10 hover:border-white/25 flex items-center justify-center text-xs font-semibold text-[#c2e7ff] ml-1 cursor-pointer transition overflow-hidden"
+          title={user?.firstName ? `${user.firstName} (${activeChannel.title || "Cloud"})` : "Account"}
+        >
+          {user?.firstName ? (
+            user.firstName.charAt(0).toUpperCase()
+          ) : (
+            <User className="w-4 h-4 text-[#9aa0a6]" />
+          )}
         </div>
       </div>
     </header>

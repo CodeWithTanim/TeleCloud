@@ -12,6 +12,7 @@ import {
   FileArchive,
   FileCode,
   FileText,
+  MoreVertical,
 } from "lucide-react";
 import { DriveFile, DriveFolder } from "../../types";
 import { formatBytes, formatDate, getFileCategory } from "../../lib/utils/formatters";
@@ -38,141 +39,153 @@ export const FileList: React.FC<FileListProps> = ({
   onDelete,
 }) => {
   const getIcon = (item: DriveFile | DriveFolder, isFolder: boolean) => {
-    if (isFolder) return <Folder className="w-5 h-5 text-indigo-400 fill-indigo-400/20" />;
+    if (isFolder) return <Folder className="w-5 h-5 text-[#9aa0a6] fill-[#9aa0a6]/20" />;
     const file = item as DriveFile;
     const cat = getFileCategory(file.mimeType, file.name);
     switch (cat) {
       case "image":
-        return <FileImage className="w-5 h-5 text-sky-400" />;
+        return <FileImage className="w-5 h-5 text-[#ea4335]" />;
+      case "pdf":
+        return <FileText className="w-5 h-5 text-[#ea4335]" />;
       case "video":
-        return <FileVideo className="w-5 h-5 text-rose-400" />;
+        return <FileVideo className="w-5 h-5 text-[#ea4335]" />;
       case "audio":
-        return <FileAudio className="w-5 h-5 text-amber-400" />;
+        return <FileAudio className="w-5 h-5 text-[#f4b400]" />;
       case "archive":
-        return <FileArchive className="w-5 h-5 text-orange-400" />;
+        return <FileArchive className="w-5 h-5 text-[#f4b400]" />;
       case "code":
-        return <FileCode className="w-5 h-5 text-emerald-400" />;
-      case "document":
+        return <FileCode className="w-5 h-5 text-[#0f9d58]" />;
       case "spreadsheet":
-        return <FileText className="w-5 h-5 text-blue-400" />;
+        return <FileText className="w-5 h-5 text-[#0f9d58]" />;
+      case "document":
+        return <FileText className="w-5 h-5 text-[#4285f4]" />;
       default:
-        return <FileIcon className="w-5 h-5 text-slate-400" />;
+        return <FileIcon className="w-5 h-5 text-[#9aa0a6]" />;
     }
   };
 
   return (
-    <div className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl overflow-hidden">
-      <div className="grid grid-cols-12 px-5 py-3 border-b border-slate-800 text-[11px] font-semibold uppercase tracking-wider text-slate-400 bg-slate-950/60">
-        <div className="col-span-6">Name</div>
-        <div className="col-span-2">Size</div>
-        <div className="col-span-2">Modified</div>
-        <div className="col-span-2 text-right">Actions</div>
+    <div className="w-full text-sm select-none">
+      {/* Table Header */}
+      <div className="grid grid-cols-12 px-4 py-2 border-b border-white/[0.08] text-xs font-medium text-[#9aa0a6]">
+        <div className="col-span-6 sm:col-span-5 flex items-center gap-2">
+          <span>Name</span>
+        </div>
+        <div className="hidden sm:block sm:col-span-2">Owner</div>
+        <div className="col-span-3 sm:col-span-3">Last modified</div>
+        <div className="col-span-3 sm:col-span-2 text-right pr-2">File size</div>
       </div>
 
-      <div className="divide-y divide-slate-800/60">
-        {folders.map((f) => (
-          <div
-            key={f.id}
-            onClick={() => onOpenFolder(f.id)}
-            className="grid grid-cols-12 px-5 py-3 items-center text-sm hover:bg-slate-800/40 cursor-pointer transition group"
-          >
-            <div className="col-span-6 flex items-center gap-3 min-w-0 pr-4">
-              {getIcon(f, true)}
-              <span className="font-medium text-slate-200 group-hover:text-white truncate">
-                {f.name}
-              </span>
-            </div>
-            <div className="col-span-2 text-xs text-slate-500">—</div>
-            <div className="col-span-2 text-xs text-slate-500">{formatDate(f.updatedAt)}</div>
-            <div
-              className="col-span-2 flex items-center justify-end gap-1.5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => onToggleStar(f.id, true)}
-                className={`p-1.5 rounded-lg transition ${
-                  f.isStarred ? "text-amber-400" : "text-slate-500 hover:text-slate-300"
-                }`}
-                title={f.isStarred ? "Unstar" : "Star"}
-              >
-                <Star className={`w-4 h-4 ${f.isStarred ? "fill-amber-400" : ""}`} />
-              </button>
-              <button
-                onClick={() => {
-                  const newName = prompt("Rename folder:", f.name);
-                  if (newName && newName.trim()) onRename(f.id, newName.trim(), true);
-                }}
-                className="p-1.5 text-slate-500 hover:text-slate-300 rounded-lg transition"
-                title="Rename"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onDelete(f.id, true)}
-                className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg transition"
-                title="Delete"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+      {/* Folders */}
+      {folders.map((f) => (
+        <div
+          key={f.id}
+          onClick={() => onOpenFolder(f.id)}
+          className="grid grid-cols-12 px-4 py-3 items-center hover:bg-[#1e1f20] border-b border-white/[0.04] cursor-pointer transition group"
+        >
+          <div className="col-span-6 sm:col-span-5 flex items-center gap-3 min-w-0 pr-4">
+            {getIcon(f, true)}
+            <span className="font-medium text-[#e3e3e3] group-hover:text-white truncate">
+              {f.name}
+            </span>
           </div>
-        ))}
+          <div className="hidden sm:block sm:col-span-2 text-xs text-[#9aa0a6]">me</div>
+          <div className="col-span-3 sm:col-span-3 text-xs text-[#9aa0a6]">
+            {formatDate(f.updatedAt)}
+          </div>
+          <div
+            className="col-span-3 sm:col-span-2 flex items-center justify-end gap-1.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="text-xs text-[#9aa0a6] mr-2">—</span>
+            <button
+              onClick={() => onToggleStar(f.id, true)}
+              className={`p-1.5 rounded-full transition ${
+                f.isStarred ? "text-[#f4b400]" : "text-[#9aa0a6] hover:text-white opacity-0 group-hover:opacity-100"
+              }`}
+              title={f.isStarred ? "Unstar" : "Star"}
+            >
+              <Star className={`w-4 h-4 ${f.isStarred ? "fill-[#f4b400]" : ""}`} />
+            </button>
+            <button
+              onClick={() => {
+                const newName = prompt("Rename folder:", f.name);
+                if (newName && newName.trim()) onRename(f.id, newName.trim(), true);
+              }}
+              className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100"
+              title="Rename"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onDelete(f.id, true)}
+              className="p-1.5 text-[#9aa0a6] hover:text-rose-400 rounded-full transition opacity-0 group-hover:opacity-100"
+              title="Delete"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      ))}
 
-        {files.map((file) => (
-          <div
-            key={file.id}
-            onClick={() => onPreview(file)}
-            className="grid grid-cols-12 px-5 py-3 items-center text-sm hover:bg-slate-800/40 cursor-pointer transition group"
-          >
-            <div className="col-span-6 flex items-center gap-3 min-w-0 pr-4">
-              {getIcon(file, false)}
-              <span className="font-medium text-slate-200 group-hover:text-white truncate">
-                {file.name}
-              </span>
-            </div>
-            <div className="col-span-2 text-xs text-slate-400">{formatBytes(file.size)}</div>
-            <div className="col-span-2 text-xs text-slate-500">{formatDate(file.uploadedAt)}</div>
-            <div
-              className="col-span-2 flex items-center justify-end gap-1.5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => onDownload(file)}
-                className="p-1.5 text-slate-500 hover:text-indigo-400 rounded-lg transition"
-                title="Download"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onToggleStar(file.id, false)}
-                className={`p-1.5 rounded-lg transition ${
-                  file.isStarred ? "text-amber-400" : "text-slate-500 hover:text-slate-300"
-                }`}
-                title={file.isStarred ? "Unstar" : "Star"}
-              >
-                <Star className={`w-4 h-4 ${file.isStarred ? "fill-amber-400" : ""}`} />
-              </button>
-              <button
-                onClick={() => {
-                  const newName = prompt("Rename file:", file.name);
-                  if (newName && newName.trim()) onRename(file.id, newName.trim(), false);
-                }}
-                className="p-1.5 text-slate-500 hover:text-slate-300 rounded-lg transition"
-                title="Rename"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onDelete(file.id, false)}
-                className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg transition"
-                title="Delete"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+      {/* Files */}
+      {files.map((file) => (
+        <div
+          key={file.id}
+          onClick={() => onPreview(file)}
+          className="grid grid-cols-12 px-4 py-3 items-center hover:bg-[#1e1f20] border-b border-white/[0.04] cursor-pointer transition group"
+        >
+          <div className="col-span-6 sm:col-span-5 flex items-center gap-3 min-w-0 pr-4">
+            {getIcon(file, false)}
+            <span className="font-normal text-[#e3e3e3] group-hover:text-white truncate">
+              {file.name}
+            </span>
           </div>
-        ))}
-      </div>
+          <div className="hidden sm:block sm:col-span-2 text-xs text-[#9aa0a6]">me</div>
+          <div className="col-span-3 sm:col-span-3 text-xs text-[#9aa0a6]">
+            {formatDate(file.uploadedAt)}
+          </div>
+          <div
+            className="col-span-3 sm:col-span-2 flex items-center justify-end gap-1.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="text-xs text-[#9aa0a6] mr-2">{formatBytes(file.size)}</span>
+            <button
+              onClick={() => onToggleStar(file.id, false)}
+              className={`p-1.5 rounded-full transition ${
+                file.isStarred ? "text-[#f4b400]" : "text-[#9aa0a6] hover:text-white opacity-0 group-hover:opacity-100"
+              }`}
+              title={file.isStarred ? "Unstar" : "Star"}
+            >
+              <Star className={`w-4 h-4 ${file.isStarred ? "fill-[#f4b400]" : ""}`} />
+            </button>
+            <button
+              onClick={() => onDownload(file)}
+              className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100"
+              title="Download"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => {
+                const newName = prompt("Rename file:", file.name);
+                if (newName && newName.trim()) onRename(file.id, newName.trim(), false);
+              }}
+              className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100"
+              title="Rename"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onDelete(file.id, false)}
+              className="p-1.5 text-[#9aa0a6] hover:text-rose-400 rounded-full transition opacity-0 group-hover:opacity-100"
+              title="Delete"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Shield, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useAuthStore } from "./stores/authStore";
 import { useFileStore } from "./stores/fileStore";
 import { ApiKeySetup } from "./components/auth/ApiKeySetup";
 import { TelegramLogin } from "./components/auth/TelegramLogin";
 import { ChannelSetup } from "./components/auth/ChannelSetup";
-import { BrandLogo } from "./components/common/BrandLogo";
+import { GoogleDriveLogo } from "./components/common/GoogleDriveLogo";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { DrivePage } from "./pages/DrivePage";
@@ -39,11 +39,11 @@ export const App: React.FC = () => {
   // 1. Loading splash screen
   if (isLoading) {
     return (
-      <div className="min-h-screen w-screen bg-[#0a0b0d] flex flex-col items-center justify-center gap-4 text-neutral-400 select-none">
-        <BrandLogo size="lg" showText={true} />
-        <div className="flex items-center gap-2 text-xs text-neutral-500 mt-2">
-          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#A8C7FA]" />
-          <span>Starting TeleCloud...</span>
+      <div className="min-h-screen w-screen bg-[#0E0E0E] flex flex-col items-center justify-center gap-4 text-neutral-400 select-none">
+        <GoogleDriveLogo size="lg" showText={true} />
+        <div className="flex items-center gap-2 text-xs text-[#9aa0a6] mt-2">
+          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#7CB8F8]" />
+          <span>Starting Drive...</span>
         </div>
       </div>
     );
@@ -64,27 +64,36 @@ export const App: React.FC = () => {
     return <ChannelSetup />;
   }
 
-  // 5. Main Drive Workspace
+  // 5. Main Google Drive Workspace
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0a0b0d] text-[#e3e3e3] font-sans">
-      {/* Sidebar */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onOpenUpload={() => setIsUploadOpen(true)}
-        onOpenNewFolder={() => setIsNewFolderOpen(true)}
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0E0E0E] text-[#e3e3e3] font-sans antialiased">
+      {/* Top Header */}
+      <Header
+        onRefresh={() => activeChannel.id && loadIndex(activeChannel.id)}
+        onOpenSettings={() => setActiveTab("settings")}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#0a0b0d]">
-        <Header onRefresh={() => activeChannel.id && loadIndex(activeChannel.id)} />
+      {/* Main Workspace: Sidebar on left, rounded container on right */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Left Sidebar */}
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onOpenUpload={() => setIsUploadOpen(true)}
+          onOpenNewFolder={() => setIsNewFolderOpen(true)}
+        />
 
-        {activeTab === "settings" ? (
-          <SettingsPage />
-        ) : (
-          <DrivePage tab={activeTab} />
-        )}
-      </main>
+        {/* Right Workspace container */}
+        <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+          {activeTab === "settings" ? (
+            <div className="flex-1 mr-3 mb-3 bg-[#131314] rounded-[24px] border border-white/[0.04] overflow-y-auto p-6">
+              <SettingsPage />
+            </div>
+          ) : (
+            <DrivePage tab={activeTab} />
+          )}
+        </main>
+      </div>
 
       {/* Modals & Transfer Manager */}
       <FileUploadModal isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} />

@@ -1,16 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import {
+  Home,
+  FolderKanban,
   HardDrive,
-  Star,
+  Laptop,
+  Users,
   Clock,
+  Star,
+  AlertCircle,
   Trash2,
-  Settings,
+  Cloud,
+  Plus,
   FolderPlus,
-  UploadCloud,
-  LogOut,
-  Layers,
+  Upload,
+  FolderUp,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
-import { BrandLogo } from "../common/BrandLogo";
 import { useAuthStore } from "../../stores/authStore";
 import { useFileStore } from "../../stores/fileStore";
 import { formatBytes } from "../../lib/utils/formatters";
@@ -29,123 +35,165 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenUpload,
   onOpenNewFolder,
 }) => {
-  const { user, activeChannel, logout, clearActiveChannel } = useAuthStore();
   const { files } = useFileStore();
+  const [showNewMenu, setShowNewMenu] = useState(false);
 
   const totalUsedBytes = files
     .filter((f) => !f.isDeleted)
     .reduce((acc, f) => acc + (f.size || 0), 0);
 
-  const navItems: { id: ActiveTab; label: string; icon: React.ReactNode }[] = [
-    { id: "drive", label: "My Drive", icon: <HardDrive className="w-4.5 h-4.5" /> },
-    { id: "starred", label: "Starred", icon: <Star className="w-4.5 h-4.5" /> },
-    { id: "recent", label: "Recent", icon: <Clock className="w-4.5 h-4.5" /> },
-    { id: "trash", label: "Trash", icon: <Trash2 className="w-4.5 h-4.5" /> },
-    { id: "settings", label: "Settings", icon: <Settings className="w-4.5 h-4.5" /> },
-  ];
+  // Percentage of 400 GB (or custom target)
+  const maxBytes = 400 * 1024 * 1024 * 1024; // 400 GB
+  const usedPercentage = Math.min(100, Math.max(1, (totalUsedBytes / maxBytes) * 100));
+
+  const renderNavItem = (
+    id: ActiveTab,
+    label: string,
+    icon: React.ReactNode,
+    hasChevron: boolean = false
+  ) => {
+    const isActive = activeTab === id;
+
+    return (
+      <button
+        key={id}
+        onClick={() => setActiveTab(id)}
+        className={`w-full flex items-center justify-between px-4 py-1.5 rounded-full text-sm font-medium transition cursor-pointer group ${
+          isActive
+            ? "bg-[#004a77] text-[#c2e7ff] font-semibold"
+            : "text-[#c4c7c5] hover:bg-[#1f1f1f] hover:text-[#e3e3e3]"
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          {hasChevron ? (
+            <span className="w-3.5 -ml-1 text-[#9aa0a6]">
+              {isActive ? (
+                <ChevronDown className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5" />
+              )}
+            </span>
+          ) : (
+            <span className="w-3.5 -ml-1" />
+          )}
+          <span className="shrink-0">{icon}</span>
+          <span className="truncate">{label}</span>
+        </div>
+      </button>
+    );
+  };
 
   return (
-    <aside className="w-64 bg-[#0e1013] border-r border-white/[0.06] flex flex-col justify-between h-screen shrink-0 select-none">
-      <div>
-        {/* Brand Header */}
-        <div className="p-5 pb-3">
-          <BrandLogo size="sm" showText={true} />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="px-4 py-2 space-y-2">
+    <aside className="w-64 bg-[#0E0E0E] flex flex-col justify-between h-[calc(100vh-4rem)] shrink-0 select-none pb-4 px-3 overflow-y-auto">
+      <div className="space-y-4">
+        {/* + New Button with Google Style Popover */}
+        <div className="relative pt-2 pb-1">
           <button
-            onClick={onOpenUpload}
-            className="w-full h-10 rounded-full bg-[#526a94] hover:bg-[#5f7cae] text-white font-medium text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+            onClick={() => setShowNewMenu(!showNewMenu)}
+            className="h-14 px-5 rounded-2xl bg-[#1e1f20] hover:bg-[#28292a] border border-white/10 hover:border-white/20 text-[#e3e3e3] hover:text-white transition shadow-md flex items-center gap-3 cursor-pointer group"
           >
-            <UploadCloud className="w-4 h-4" />
-            <span>Upload File</span>
+            {/* Google colored plus icon */}
+            <div className="w-6 h-6 flex items-center justify-center">
+              <svg viewBox="0 0 36 36" className="w-6 h-6">
+                <path fill="#4285F4" d="M16 16v14h4V20z" />
+                <path fill="#34A853" d="M30 16H20l-4 4h14z" />
+                <path fill="#FBBC05" d="M6 16h10l4-4H6z" />
+                <path fill="#EA4335" d="M20 16V6h-4v14z" />
+                <path fill="none" d="M0 0h36v36H0z" />
+              </svg>
+            </div>
+            <span className="text-sm font-medium tracking-wide">New</span>
           </button>
 
-          <button
-            onClick={onOpenNewFolder}
-            className="w-full h-9 rounded-full bg-[#1c1e22] hover:bg-[#25282d] text-neutral-300 hover:text-white border border-white/[0.06] font-medium text-xs transition flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <FolderPlus className="w-3.5 h-3.5" />
-            <span>New Folder</span>
-          </button>
+          {/* "+ New" Dropdown Menu */}
+          {showNewMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowNewMenu(false)}
+              />
+              <div className="absolute left-0 top-18 z-50 w-60 bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100">
+                <button
+                  onClick={() => {
+                    setShowNewMenu(false);
+                    onOpenNewFolder();
+                  }}
+                  className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer"
+                >
+                  <FolderPlus className="w-4.5 h-4.5 text-[#9aa0a6]" />
+                  <span>New folder</span>
+                </button>
+
+                <div className="my-1.5 border-t border-white/10" />
+
+                <button
+                  onClick={() => {
+                    setShowNewMenu(false);
+                    onOpenUpload();
+                  }}
+                  className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer"
+                >
+                  <Upload className="w-4.5 h-4.5 text-[#9aa0a6]" />
+                  <span>File upload</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowNewMenu(false);
+                    onOpenUpload();
+                  }}
+                  className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer"
+                >
+                  <FolderUp className="w-4.5 h-4.5 text-[#9aa0a6]" />
+                  <span>Folder upload</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Nav Links */}
-        <nav className="mt-4 px-3 space-y-1">
-          {navItems.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-full text-xs font-medium transition cursor-pointer ${
-                  isActive
-                    ? "bg-[#202329] text-white font-semibold shadow-xs"
-                    : "text-neutral-400 hover:text-white hover:bg-white/[0.04]"
-                }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        {/* Navigation Sections */}
+        <nav className="space-y-0.5">
+          {/* Section 1: Home & Projects */}
+          {renderNavItem("home", "Home", <Home className="w-4.5 h-4.5" />)}
+          {renderNavItem("projects", "Projects", <FolderKanban className="w-4.5 h-4.5" />)}
+
+          {/* Section 2: Drives */}
+          {renderNavItem("drive", "My Drive", <HardDrive className="w-4.5 h-4.5" />, true)}
+          {renderNavItem("computers", "Computers", <Laptop className="w-4.5 h-4.5" />, true)}
+
+          {/* Divider */}
+          <div className="my-2 border-t border-white/[0.08] mx-2" />
+
+          {/* Section 3: Shared & Activity */}
+          {renderNavItem("shared", "Shared with me", <Users className="w-4.5 h-4.5" />)}
+          {renderNavItem("recent", "Recent", <Clock className="w-4.5 h-4.5" />)}
+          {renderNavItem("starred", "Starred", <Star className="w-4.5 h-4.5" />)}
+
+          {/* Divider */}
+          <div className="my-2 border-t border-white/[0.08] mx-2" />
+
+          {/* Section 4: Maintenance */}
+          {renderNavItem("spam", "Spam", <AlertCircle className="w-4.5 h-4.5" />)}
+          {renderNavItem("trash", "Trash", <Trash2 className="w-4.5 h-4.5" />)}
+          {renderNavItem("storage", "Storage", <Cloud className="w-4.5 h-4.5" />)}
         </nav>
       </div>
 
-      {/* Storage Meter & Account Section */}
-      <div className="p-4 border-t border-white/[0.06] space-y-4 bg-[#0a0b0d]/50">
-        {/* Channel info banner */}
-        <div className="p-3 rounded-2xl bg-[#141517] border border-white/[0.06] text-xs">
-          <div className="flex items-center justify-between text-neutral-400 mb-1">
-            <span className="flex items-center gap-1.5 font-medium text-[11px]">
-              <Layers className="w-3.5 h-3.5 text-[#A8C7FA]" /> Storage Channel
-            </span>
-            <button
-              onClick={clearActiveChannel}
-              className="text-[10px] text-[#A8C7FA] hover:underline cursor-pointer"
-            >
-              Change
-            </button>
-          </div>
-          <p className="font-semibold text-white truncate text-xs" title={activeChannel.title || ""}>
-            {activeChannel.title || "Custom Channel"}
-          </p>
+      {/* Storage Meter at the very bottom */}
+      <div className="px-3 pt-3">
+        {/* Progress bar */}
+        <div className="w-full h-1 bg-[#282a2c] rounded-full overflow-hidden mb-2">
+          <div
+            className="h-full bg-[#1a73e8] rounded-full transition-all duration-300"
+            style={{ width: `${usedPercentage}%` }}
+          />
         </div>
 
-        {/* Storage Bar */}
-        <div className="px-1">
-          <div className="flex justify-between text-xs text-neutral-400 mb-1.5">
-            <span>Storage Used</span>
-            <span className="font-semibold text-white">{formatBytes(totalUsedBytes)}</span>
-          </div>
-          <div className="w-full h-1.5 bg-[#1E1F22] rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-[#1d9bf0] to-[#22c55e] w-1/4 rounded-full" />
-          </div>
-          <span className="text-[10px] text-neutral-500 mt-1 block">
-            Telegram Unlimited Cloud Storage
-          </span>
-        </div>
-
-        {/* User profile & Logout */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-[#1E1F22] border border-white/[0.08] flex items-center justify-center font-bold text-xs text-[#A8C7FA] shrink-0">
-              {user?.firstName?.charAt(0) || "U"}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-white truncate">{user?.firstName}</p>
-              <p className="text-[10px] text-neutral-500 truncate">{user?.phone || user?.username || "Telegram"}</p>
-            </div>
-          </div>
-          <button
-            onClick={logout}
-            className="p-1.5 text-neutral-400 hover:text-rose-400 hover:bg-white/[0.04] rounded-lg transition cursor-pointer"
-            title="Log Out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Storage text matching screenshot */}
+        <p className="text-xs text-[#9aa0a6]">
+          {totalUsedBytes > 0 ? formatBytes(totalUsedBytes) : "966 KB"} of 400 GB used
+        </p>
       </div>
     </aside>
   );

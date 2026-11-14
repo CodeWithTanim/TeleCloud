@@ -100,7 +100,7 @@ export const FileCard: React.FC<FileCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
-      className="group relative bg-[#141517] hover:bg-[#1a1c21] border border-white/[0.08] hover:border-white/[0.18] rounded-2xl p-3 transition duration-200 cursor-pointer flex flex-col justify-between hover:shadow-xl hover:shadow-black/50 overflow-hidden"
+      className="group relative bg-[#1e1f20] hover:bg-[#282a2c] border border-white/[0.04] hover:border-white/[0.12] rounded-2xl p-3 transition duration-200 cursor-pointer flex flex-col justify-between hover:shadow-lg overflow-hidden"
     >
       {/* Top action buttons (Star & Menu) */}
       <div
@@ -111,18 +111,18 @@ export const FileCard: React.FC<FileCardProps> = ({
           onClick={() => onToggleStar(item.id, isFolder)}
           className={`p-1.5 rounded-lg transition backdrop-blur-md ${
             item.isStarred
-              ? "text-amber-400 hover:text-amber-300 bg-black/60"
-              : "text-neutral-400 hover:text-white bg-black/40 opacity-0 group-hover:opacity-100"
+              ? "text-[#f4b400] bg-black/60"
+              : "text-[#9aa0a6] hover:text-white bg-black/40 opacity-0 group-hover:opacity-100"
           }`}
           title={item.isStarred ? "Unstar" : "Star"}
         >
-          <Star className={`w-3.5 h-3.5 ${item.isStarred ? "fill-amber-400" : ""}`} />
+          <Star className={`w-3.5 h-3.5 ${item.isStarred ? "fill-[#f4b400]" : ""}`} />
         </button>
 
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 text-neutral-400 hover:text-white bg-black/50 backdrop-blur-md hover:bg-neutral-800 rounded-lg transition opacity-80 group-hover:opacity-100"
+            className="p-1.5 text-[#9aa0a6] hover:text-white bg-black/50 backdrop-blur-md hover:bg-neutral-800 rounded-lg transition opacity-80 group-hover:opacity-100"
           >
             <MoreVertical className="w-3.5 h-3.5" />
           </button>
@@ -133,7 +133,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                 className="fixed inset-0 z-30"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-8 z-40 w-44 bg-[#18191B] border border-white/[0.08] rounded-xl shadow-2xl py-1 text-xs text-neutral-300 animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute right-0 top-8 z-40 w-44 bg-[#1e1f20] border border-white/10 rounded-xl shadow-2xl py-1 text-xs text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100">
                 {file && onDownload && (
                   <button
                     onClick={() => {

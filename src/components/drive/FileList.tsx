@@ -170,10 +170,7 @@ export const FileList: React.FC<FileListProps> = ({
                     </button>
                   )}
                   <button
-                    onClick={() => {
-                      const newName = prompt("Rename folder:", f.name);
-                      if (newName && newName.trim()) onRename(f.id, newName.trim(), true);
-                    }}
+                    onClick={() => onRename(f.id, f.name, true)}
                     className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
                     title="Rename"
                   >
@@ -262,10 +259,7 @@ export const FileList: React.FC<FileListProps> = ({
               ) : (
                 <>
                   <button
-                    onClick={() => {
-                      const newName = prompt("Rename file:", file.name);
-                      if (newName && newName.trim()) onRename(file.id, newName.trim(), false);
-                    }}
+                    onClick={() => onRename(file.id, file.name, false)}
                     className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
                     title="Rename"
                   >

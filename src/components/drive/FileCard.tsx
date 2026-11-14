@@ -200,10 +200,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                 <button
                   onClick={() => {
                     setShowMenu(false);
-                    const newName = prompt(isFolder ? "Rename folder:" : "Rename file:", item.name);
-                    if (newName && newName.trim()) {
-                      onRename(item.id, newName.trim(), isFolder);
-                    }
+                    onRename(item.id, item.name, isFolder);
                   }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition cursor-pointer group"
                 >

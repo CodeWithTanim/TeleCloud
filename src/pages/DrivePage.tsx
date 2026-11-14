@@ -32,6 +32,8 @@ import { FileGrid } from "../components/drive/FileGrid";
 import { FileList } from "../components/drive/FileList";
 import { FilePreviewModal } from "../components/drive/FilePreviewModal";
 import { DriveEmptyIllustration } from "../components/drive/DriveEmptyIllustration";
+import { RenameModal } from "../components/common/RenameModal";
+import { ConfirmModal } from "../components/common/ConfirmModal";
 import { triggerFileDownload, downloadFolderAsZip } from "../lib/telegram/downloader";
 import { uploadFileToChannel } from "../lib/telegram/uploader";
 import { getFileCategory } from "../lib/utils/formatters";
@@ -83,6 +85,15 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   const [customStartDate, setCustomStartDate] = useState<number | null>(null);
   const [customEndDate, setCustomEndDate] = useState<number | null>(null);
   const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [renameTarget, setRenameTarget] = useState<{ id: string; name: string; isFolder: boolean } | null>(null);
+  const [confirmModalState, setConfirmModalState] = useState<{
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    isDanger?: boolean;
+    onConfirm: () => void;
+  } | null>(null);
   const dragCounter = useRef(0);
 
   // Filter items based on tab & folder
@@ -283,17 +294,44 @@ export const DrivePage: React.FC<DrivePageProps> = ({
     toggleStar(activeChannel.id, id, isFolder);
   };
 
-  const handleRename = (id: string, name: string, isFolder: boolean) => {
-    if (!activeChannel.id) return;
-    renameItem(activeChannel.id, id, name, isFolder);
+  const handleOpenRename = (id: string, name: string, isFolder: boolean) => {
+    setRenameTarget({ id, name, isFolder });
+  };
+
+  const handleConfirmRename = (newName: string) => {
+    if (!activeChannel.id || !renameTarget) return;
+    renameItem(activeChannel.id, renameTarget.id, newName, renameTarget.isFolder);
+    setRenameTarget(null);
   };
 
   const handleDelete = (id: string, isFolder: boolean) => {
-    if (!activeChannel.id) return;
+    const channelId = activeChannel.id;
+    if (!channelId) return;
+    const item = isFolder ? folders.find((f) => f.id === id) : files.find((f) => f.id === id);
+    const itemName = item?.name || (isFolder ? "folder" : "file");
+
     if (tab === "trash") {
-      deletePermanently(activeChannel.id, id, isFolder);
+      setConfirmModalState({
+        title: "Delete forever?",
+        message: `"${itemName}" will be permanently deleted from Telegram. You cannot undo this action.`,
+        confirmText: "Delete forever",
+        isDanger: true,
+        onConfirm: () => {
+          deletePermanently(channelId, id, isFolder);
+          setConfirmModalState(null);
+        },
+      });
     } else {
-      moveToTrash(activeChannel.id, id, isFolder);
+      setConfirmModalState({
+        title: isFolder ? "Move folder to trash?" : "Move to trash?",
+        message: `"${itemName}" will be moved to trash. You can restore it anytime or delete it permanently from trash.`,
+        confirmText: "Move to trash",
+        isDanger: true,
+        onConfirm: () => {
+          moveToTrash(channelId, id, isFolder);
+          setConfirmModalState(null);
+        },
+      });
     }
   };
 
@@ -356,30 +394,55 @@ export const DrivePage: React.FC<DrivePageProps> = ({
     setCanvasContextMenu({ x, y });
   };
 
-  const handleEmptyTrash = async () => {
-    if (!activeChannel.id) return;
+  const handleEmptyTrash = () => {
+    const channelId = activeChannel.id;
+    if (!channelId) return;
     const trashedCount = filteredFiles.length + filteredFolders.length;
     if (trashedCount === 0) return;
-    if (
-      confirm(
-        `Empty trash? All ${trashedCount} item(s) will be permanently deleted from Telegram and cannot be recovered.`
-      )
-    ) {
-      await emptyTrash(activeChannel.id);
-    }
+    setConfirmModalState({
+      title: "Empty trash?",
+      message: `All ${trashedCount} item(s) in trash will be permanently deleted from Telegram. You cannot undo this action.`,
+      confirmText: "Empty trash",
+      isDanger: true,
+      onConfirm: async () => {
+        await emptyTrash(channelId);
+        setConfirmModalState(null);
+      },
+    });
   };
 
   const handleDeleteSelected = () => {
-    if (!activeChannel.id || selectedIds.length === 0) return;
+    const channelId = activeChannel.id;
+    if (!channelId || selectedIds.length === 0) return;
+    const count = selectedIds.length;
     if (tab === "trash") {
-      deleteMultiplePermanently(activeChannel.id, selectedIds);
+      setConfirmModalState({
+        title: "Delete forever?",
+        message: `${count} selected item(s) will be permanently deleted from Telegram. You cannot undo this action.`,
+        confirmText: "Delete forever",
+        isDanger: true,
+        onConfirm: async () => {
+          await deleteMultiplePermanently(channelId, selectedIds);
+          setSelectedIds([]);
+          setConfirmModalState(null);
+        },
+      });
     } else {
-      for (const id of selectedIds) {
-        const isFolder = folders.some((f) => f.id === id);
-        moveToTrash(activeChannel.id, id, isFolder);
-      }
+      setConfirmModalState({
+        title: "Move to trash?",
+        message: `${count} selected item(s) will be moved to trash.`,
+        confirmText: "Move to trash",
+        isDanger: true,
+        onConfirm: () => {
+          for (const id of selectedIds) {
+            const isFolder = folders.some((f) => f.id === id);
+            moveToTrash(channelId, id, isFolder);
+          }
+          setSelectedIds([]);
+          setConfirmModalState(null);
+        },
+      });
     }
-    setSelectedIds([]);
   };
 
   // Breadcrumbs calculation
@@ -1119,7 +1182,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onDownload={handleDownload}
             onDownloadFolder={handleDownloadFolder}
             onToggleStar={handleToggleStar}
-            onRename={handleRename}
+            onRename={handleOpenRename}
             onDelete={handleDelete}
             onRestore={handleRestore}
             onTogglePin={handleTogglePin}
@@ -1134,7 +1197,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onDownload={handleDownload}
             onDownloadFolder={handleDownloadFolder}
             onToggleStar={handleToggleStar}
-            onRename={handleRename}
+            onRename={handleOpenRename}
             onDelete={handleDelete}
             onRestore={handleRestore}
             onTogglePin={handleTogglePin}
@@ -1285,6 +1348,30 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             </button>
           </div>
         </>
+      )}
+      {/* Rename Modal */}
+      {renameTarget && (
+        <RenameModal
+          isOpen={Boolean(renameTarget)}
+          currentName={renameTarget.name}
+          isFolder={renameTarget.isFolder}
+          onClose={() => setRenameTarget(null)}
+          onConfirm={handleConfirmRename}
+        />
+      )}
+
+      {/* Confirm Action / Delete Modal */}
+      {confirmModalState && (
+        <ConfirmModal
+          isOpen={Boolean(confirmModalState)}
+          title={confirmModalState.title}
+          message={confirmModalState.message}
+          confirmText={confirmModalState.confirmText}
+          cancelText={confirmModalState.cancelText}
+          isDanger={confirmModalState.isDanger}
+          onClose={() => setConfirmModalState(null)}
+          onConfirm={confirmModalState.onConfirm}
+        />
       )}
     </div>
   );

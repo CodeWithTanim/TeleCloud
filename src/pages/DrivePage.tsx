@@ -834,15 +834,6 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             )}
           </div>
 
-          {/* People Filter */}
-          <button
-            className="px-3 py-1.5 rounded-lg border border-[#444746] hover:bg-[#282a2c] text-[#e3e3e3] flex items-center gap-1.5 transition cursor-pointer font-medium"
-            title="Filter by person"
-          >
-            <span>People</span>
-            <ChevronDown className="w-3.5 h-3.5 text-[#9aa0a6]" />
-          </button>
-
           {/* Modified Filter */}
           <div className="relative">
             <button
@@ -985,15 +976,6 @@ export const DrivePage: React.FC<DrivePageProps> = ({
               </>
             )}
           </div>
-
-          {/* Source Filter */}
-          <button
-            className="px-3 py-1.5 rounded-lg border border-[#444746] hover:bg-[#282a2c] text-[#e3e3e3] flex items-center gap-1.5 transition cursor-pointer font-medium"
-            title="Filter by storage channel"
-          >
-            <span>Source</span>
-            <ChevronDown className="w-3.5 h-3.5 text-[#9aa0a6]" />
-          </button>
         </div>
       </div>
 

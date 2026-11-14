@@ -86,23 +86,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="w-64 bg-[#0E0E0E] flex flex-col justify-between h-[calc(100vh-4rem)] shrink-0 select-none pb-4 px-3 overflow-y-auto">
       <div className="space-y-4">
-        {/* + New Button with Google Style Popover */}
+        {/* + New Button */}
         <div className="relative pt-2 pb-1">
           <button
             onClick={() => setShowNewMenu(!showNewMenu)}
-            className="h-14 px-5 rounded-2xl bg-[#1e1f20] hover:bg-[#28292a] border border-white/10 hover:border-white/20 text-[#e3e3e3] hover:text-white transition shadow-md flex items-center gap-3 cursor-pointer group"
+            className="h-12 px-5 rounded-2xl bg-[#37393b] hover:bg-[#444649] text-white transition-all duration-150 shadow-md flex items-center gap-3 cursor-pointer group"
           >
-            {/* Google colored plus icon */}
-            <div className="w-6 h-6 flex items-center justify-center">
-              <svg viewBox="0 0 36 36" className="w-6 h-6">
-                <path fill="#4285F4" d="M16 16v14h4V20z" />
-                <path fill="#34A853" d="M30 16H20l-4 4h14z" />
-                <path fill="#FBBC05" d="M6 16h10l4-4H6z" />
-                <path fill="#EA4335" d="M20 16V6h-4v14z" />
-                <path fill="none" d="M0 0h36v36H0z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium tracking-wide">New</span>
+            <Plus className="w-5 h-5 text-white" strokeWidth={2.4} />
+            <span className="text-sm font-medium text-white tracking-wide">New</span>
           </button>
 
           {/* "+ New" Dropdown Menu */}

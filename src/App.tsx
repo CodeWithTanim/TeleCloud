@@ -92,6 +92,7 @@ export const App: React.FC = () => {
           ) : (
             <DrivePage
               tab={activeTab}
+              setActiveTab={setActiveTab}
               onOpenUpload={() => setIsUploadOpen(true)}
               onOpenNewFolder={() => setIsNewFolderOpen(true)}
             />

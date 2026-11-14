@@ -38,12 +38,14 @@ import { DriveFile, DriveFolder, ActiveTab } from "../types";
 
 interface DrivePageProps {
   tab: ActiveTab;
+  setActiveTab?: (tab: ActiveTab) => void;
   onOpenUpload?: () => void;
   onOpenNewFolder?: () => void;
 }
 
 export const DrivePage: React.FC<DrivePageProps> = ({
   tab,
+  setActiveTab,
   onOpenUpload,
   onOpenNewFolder,
 }) => {
@@ -89,6 +91,9 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   if (tab === "trash") {
     filteredFolders = folders.filter((f) => f.isDeleted);
     filteredFiles = files.filter((f) => f.isDeleted);
+  } else if (tab === "starred") {
+    filteredFolders = folders.filter((f) => !f.isDeleted && f.isStarred);
+    filteredFiles = files.filter((f) => !f.isDeleted && f.isStarred);
   } else {
     // Normal "home" tab: filter by active folder & non-deleted
     filteredFolders = folders.filter(
@@ -273,6 +278,13 @@ export const DrivePage: React.FC<DrivePageProps> = ({
     togglePinFolder(activeChannel.id, id);
   };
 
+  const handleOpenFolder = (id: string) => {
+    if (tab === "starred") {
+      setActiveTab?.("home");
+    }
+    setCurrentFolderId(id);
+  };
+
   useEffect(() => {
     const handleClose = () => setCanvasContextMenu(null);
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -358,6 +370,8 @@ export const DrivePage: React.FC<DrivePageProps> = ({
     switch (tab) {
       case "trash":
         return "Trash";
+      case "starred":
+        return "Starred";
       case "home":
       case "drive":
       default:
@@ -1052,6 +1066,16 @@ export const DrivePage: React.FC<DrivePageProps> = ({
                   Items moved to trash will appear here
                 </p>
               </div>
+            ) : tab === "starred" ? (
+              <div className="flex flex-col items-center justify-center select-none text-center">
+                <div className="w-20 h-20 rounded-full bg-[#1e1f20] border border-white/10 flex items-center justify-center text-[#f4b400] mb-3">
+                  <Star className="w-10 h-10 stroke-1 fill-[#f4b400]/20" />
+                </div>
+                <h2 className="text-xl font-medium text-[#E3E3E3] tracking-tight">No starred files or folders</h2>
+                <p className="text-sm text-[#9AA0A6] mt-1.5 max-w-md font-normal">
+                  Add stars to things that you want to easily find later
+                </p>
+              </div>
             ) : (
               <DriveEmptyIllustration />
             )}
@@ -1061,7 +1085,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             folders={filteredFolders}
             files={filteredFiles}
             selectedIds={selectedIds}
-            onOpenFolder={(id: string) => setCurrentFolderId(id)}
+            onOpenFolder={handleOpenFolder}
             onPreview={(f: DriveFile) => setPreviewFile(f)}
             onDownload={handleDownload}
             onToggleStar={handleToggleStar}
@@ -1075,7 +1099,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             folders={filteredFolders}
             files={filteredFiles}
             selectedIds={selectedIds}
-            onOpenFolder={(id: string) => setCurrentFolderId(id)}
+            onOpenFolder={handleOpenFolder}
             onPreview={(f: DriveFile) => setPreviewFile(f)}
             onDownload={handleDownload}
             onToggleStar={handleToggleStar}

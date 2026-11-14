@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   Home,
+  Star,
   Trash2,
   Plus,
   FolderPlus,
@@ -132,9 +133,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        {/* Navigation Sections: Home, Pinned Folders & Trash */}
+        {/* Navigation Sections: Home, Starred, Pinned Folders & Trash */}
         <nav className="space-y-1">
           {renderNavItem("home", "Home", <Home className="w-4.5 h-4.5" />, () => setCurrentFolderId(null))}
+          {renderNavItem("starred", "Starred", <Star className="w-4.5 h-4.5" />, () => setCurrentFolderId(null))}
 
           {/* Pinned Folders Section */}
           <div className="pt-2 pb-1">

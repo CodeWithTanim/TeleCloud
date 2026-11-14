@@ -384,3 +384,53 @@ export async function deleteTelegramMessages(
     console.warn(`[indexStore] Could not delete messages from Telegram channel:`, err);
   }
 }
+
+/**
+ * Updates the caption of a file message (and its chunks if any) on the Telegram storage channel.
+ */
+export async function updateTelegramFileMessageCaption(
+  channelId: string,
+  messageId: number,
+  newFileName: string,
+  chunkMsgIds?: number[]
+): Promise<void> {
+  if (!messageId || messageId <= 0) return;
+
+  try {
+    const client = getClient();
+    const peer = await client.getEntity(channelId);
+
+    // Edit main message caption on Telegram
+    try {
+      await client.editMessage(peer, {
+        message: messageId,
+        text: `📁 TeleCloud File: ${newFileName}`,
+      });
+      console.log(`[indexStore] Updated Telegram message ${messageId} caption to: ${newFileName}`);
+    } catch (err: any) {
+      if (!err?.message?.includes("MESSAGE_NOT_MODIFIED")) {
+        console.warn(`[indexStore] Could not edit main message caption:`, err);
+      }
+    }
+
+    // Edit chunk message captions if any
+    if (chunkMsgIds && chunkMsgIds.length > 0) {
+      for (let i = 0; i < chunkMsgIds.length; i++) {
+        const chunkId = chunkMsgIds[i];
+        if (chunkId === messageId) continue;
+        try {
+          await client.editMessage(peer, {
+            message: chunkId,
+            text: `📁 TeleCloud File: ${newFileName} (Part ${i + 1}/${chunkMsgIds.length})`,
+          });
+        } catch (err: any) {
+          if (!err?.message?.includes("MESSAGE_NOT_MODIFIED")) {
+            console.warn(`[indexStore] Could not edit chunk ${chunkId} caption:`, err);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[indexStore] Could not update file message caption on Telegram:`, err);
+  }
+}

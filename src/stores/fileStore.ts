@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { DriveFile, DriveFolder, ViewMode } from "../types";
-import { loadDriveIndex, saveDriveIndex, deleteTelegramMessages } from "../lib/telegram/indexStore";
+import {
+  loadDriveIndex,
+  saveDriveIndex,
+  deleteTelegramMessages,
+  updateTelegramFileMessageCaption,
+} from "../lib/telegram/indexStore";
 
 interface FileState {
   files: DriveFile[];
@@ -125,6 +130,8 @@ export const useFileStore = create<FileState>((set, get) => ({
     let nextFiles = [...files];
     let nextFolders = [...folders];
 
+    const targetFile = !isFolder ? files.find((f) => f.id === id) : null;
+
     if (isFolder) {
       nextFolders = nextFolders.map((f) =>
         f.id === id ? { ...f, name: newName.trim(), updatedAt: Date.now() } : f
@@ -138,6 +145,16 @@ export const useFileStore = create<FileState>((set, get) => ({
     set({ files: nextFiles, folders: nextFolders, isSaving: true });
     try {
       await saveDriveIndex(channelId, nextFiles, nextFolders);
+
+      // If it's a file, update the Telegram message caption immediately on the channel!
+      if (targetFile && targetFile.messageId) {
+        await updateTelegramFileMessageCaption(
+          channelId,
+          targetFile.messageId,
+          newName.trim(),
+          targetFile.chunkMsgIds
+        );
+      }
     } finally {
       set({ isSaving: false });
     }

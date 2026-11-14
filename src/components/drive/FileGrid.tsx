@@ -5,6 +5,7 @@ import { FileCard } from "./FileCard";
 interface FileGridProps {
   folders: DriveFolder[];
   files: DriveFile[];
+  selectedIds?: string[];
   onOpenFolder: (folderId: string) => void;
   onPreview: (file: DriveFile) => void;
   onDownload: (file: DriveFile) => void;
@@ -16,6 +17,7 @@ interface FileGridProps {
 export const FileGrid: React.FC<FileGridProps> = ({
   folders,
   files,
+  selectedIds = [],
   onOpenFolder,
   onPreview,
   onDownload,
@@ -37,6 +39,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 key={folder.id}
                 item={folder}
                 isFolder={true}
+                isSelected={selectedIds.includes(folder.id)}
                 onOpenFolder={onOpenFolder}
                 onToggleStar={onToggleStar}
                 onRename={onRename}
@@ -59,6 +62,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 key={file.id}
                 item={file}
                 isFolder={false}
+                isSelected={selectedIds.includes(file.id)}
                 onPreview={onPreview}
                 onDownload={onDownload}
                 onToggleStar={onToggleStar}

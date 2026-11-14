@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -255,6 +255,111 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
     }
   };
 
+  // Marquee Drag Selection State
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{ x: number; y: number } | null>(null);
+  const [selectionCurrent, setSelectionCurrent] = useState<{ x: number; y: number } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsSelecting(false);
+      setSelectionStart(null);
+      setSelectionCurrent(null);
+    };
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => window.removeEventListener("mouseup", handleGlobalMouseUp);
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+
+    if (
+      target.closest("button") ||
+      target.closest("input") ||
+      target.closest("a") ||
+      target.closest("[data-no-drag]")
+    ) {
+      return;
+    }
+
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left + containerRef.current.scrollLeft;
+    const y = e.clientY - rect.top + containerRef.current.scrollTop;
+
+    if (!target.closest("[data-item-id]")) {
+      if (!e.shiftKey && !e.ctrlKey) {
+        setSelectedIds([]);
+      }
+    }
+
+    setIsSelecting(true);
+    setSelectionStart({ x, y });
+    setSelectionCurrent({ x, y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isSelecting || !selectionStart || !containerRef.current) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left + containerRef.current.scrollLeft;
+    const y = e.clientY - rect.top + containerRef.current.scrollTop;
+
+    setSelectionCurrent({ x, y });
+
+    const boxLeft = Math.min(selectionStart.x, x);
+    const boxRight = Math.max(selectionStart.x, x);
+    const boxTop = Math.min(selectionStart.y, y);
+    const boxBottom = Math.max(selectionStart.y, y);
+
+    if (boxRight - boxLeft < 4 && boxBottom - boxTop < 4) return;
+
+    const itemElements = containerRef.current.querySelectorAll("[data-item-id]");
+    const newlySelected: string[] = [];
+
+    itemElements.forEach((el) => {
+      const htmlEl = el as HTMLElement;
+      const id = htmlEl.getAttribute("data-item-id");
+      if (!id) return;
+
+      const itemLeft = htmlEl.offsetLeft;
+      const itemTop = htmlEl.offsetTop;
+      const itemRight = itemLeft + htmlEl.offsetWidth;
+      const itemBottom = itemTop + htmlEl.offsetHeight;
+
+      const intersects =
+        itemLeft < boxRight &&
+        itemRight > boxLeft &&
+        itemTop < boxBottom &&
+        itemBottom > boxTop;
+
+      if (intersects) {
+        newlySelected.push(id);
+      }
+    });
+
+    setSelectedIds(newlySelected);
+  };
+
+  const handleMouseUp = () => {
+    setIsSelecting(false);
+    setSelectionStart(null);
+    setSelectionCurrent(null);
+  };
+
+  const selectionBox =
+    isSelecting && selectionStart && selectionCurrent
+      ? {
+          left: Math.min(selectionStart.x, selectionCurrent.x),
+          top: Math.min(selectionStart.y, selectionCurrent.y),
+          width: Math.abs(selectionCurrent.x - selectionStart.x),
+          height: Math.abs(selectionCurrent.y - selectionStart.y),
+        }
+      : null;
+
   const isEmpty = filteredFolders.length === 0 && filteredFiles.length === 0;
 
   return (
@@ -470,7 +575,26 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
       </div>
 
       {/* Main Workspace Body */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6">
+      <div
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        className="flex-1 overflow-y-auto px-6 pb-6 relative select-none"
+      >
+        {/* Marquee Drag Selection Box (matching user screenshot) */}
+        {selectionBox && (selectionBox.width > 2 || selectionBox.height > 2) && (
+          <div
+            className="absolute pointer-events-none z-30 border border-white/70 bg-white/10 rounded-xs shadow-[0_0_8px_rgba(255,255,255,0.08)]"
+            style={{
+              left: `${selectionBox.left}px`,
+              top: `${selectionBox.top}px`,
+              width: `${selectionBox.width}px`,
+              height: `${selectionBox.height}px`,
+            }}
+          />
+        )}
+
         {isEmpty ? (
           <div className="h-full flex items-center justify-center min-h-[50vh]">
             <DriveEmptyIllustration />
@@ -479,6 +603,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
           <FileGrid
             folders={filteredFolders}
             files={filteredFiles}
+            selectedIds={selectedIds}
             onOpenFolder={(id: string) => setCurrentFolderId(id)}
             onPreview={(f: DriveFile) => setPreviewFile(f)}
             onDownload={handleDownload}
@@ -490,6 +615,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
           <FileList
             folders={filteredFolders}
             files={filteredFiles}
+            selectedIds={selectedIds}
             onOpenFolder={(id: string) => setCurrentFolderId(id)}
             onPreview={(f: DriveFile) => setPreviewFile(f)}
             onDownload={handleDownload}
@@ -499,6 +625,22 @@ export const DrivePage: React.FC<DrivePageProps> = ({ tab }) => {
           />
         )}
       </div>
+
+      {/* Floating Selection Bar */}
+      {selectedIds.length > 0 && (
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-40 bg-[#1e1f20] border border-white/15 px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 text-xs text-white animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <span className="font-medium text-[#7CB8F8]">
+            {selectedIds.length} {selectedIds.length === 1 ? "item" : "items"} selected
+          </span>
+          <div className="w-px h-3.5 bg-white/10" />
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[#9aa0a6] hover:text-white transition cursor-pointer"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
 
       {/* File Preview Modal */}
       <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />

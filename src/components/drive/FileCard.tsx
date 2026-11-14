@@ -21,6 +21,7 @@ import { getOrFetchThumbnail } from "../../lib/telegram/downloader";
 interface FileCardProps {
   item: DriveFile | DriveFolder;
   isFolder: boolean;
+  isSelected?: boolean;
   onOpenFolder?: (folderId: string) => void;
   onPreview?: (file: DriveFile) => void;
   onDownload?: (file: DriveFile) => void;
@@ -32,6 +33,7 @@ interface FileCardProps {
 export const FileCard: React.FC<FileCardProps> = ({
   item,
   isFolder,
+  isSelected = false,
   onOpenFolder,
   onPreview,
   onDownload,
@@ -103,8 +105,13 @@ export const FileCard: React.FC<FileCardProps> = ({
 
   return (
     <div
+      data-item-id={item.id}
       onClick={handleCardClick}
-      className="group relative bg-[#1e1f20] hover:bg-[#282a2c] border border-white/[0.04] hover:border-white/[0.12] rounded-2xl p-3 transition duration-200 cursor-pointer flex flex-col justify-between hover:shadow-lg overflow-hidden"
+      className={`group relative rounded-2xl p-3 transition duration-200 cursor-pointer flex flex-col justify-between overflow-hidden ${
+        isSelected
+          ? "bg-[#004a77]/35 border border-[#7CB8F8]/60 ring-2 ring-[#7CB8F8]/40 shadow-lg shadow-black/40"
+          : "bg-[#1e1f20] hover:bg-[#282a2c] border border-white/[0.04] hover:border-white/[0.12] hover:shadow-lg"
+      }`}
     >
       {/* Top action buttons (Star & Menu) */}
       <div

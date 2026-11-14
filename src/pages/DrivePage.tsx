@@ -69,6 +69,10 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showModifiedDropdown, setShowModifiedDropdown] = useState(false);
   const [modifiedFilter, setModifiedFilter] = useState<string>("all");
+  const [pendingModified, setPendingModified] = useState<string>("all");
+  const [showCustomRange, setShowCustomRange] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<number | null>(null);
+  const [customEndDate, setCustomEndDate] = useState<number | null>(null);
   const dragCounter = useRef(0);
 
   // Filter items based on tab & folder
@@ -159,15 +163,29 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   }
 
   // Modified filter chip
+  const currentYear = new Date().getFullYear();
+  const startOfThisYear = new Date(currentYear, 0, 1).getTime();
+  const startOfLastYear = new Date(currentYear - 1, 0, 1).getTime();
+  const oneDay = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
   if (modifiedFilter !== "all") {
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
     if (modifiedFilter === "today") {
       filteredFiles = filteredFiles.filter((f) => now - f.uploadedAt <= oneDay);
-    } else if (modifiedFilter === "week") {
+    } else if (modifiedFilter === "7days" || modifiedFilter === "week") {
       filteredFiles = filteredFiles.filter((f) => now - f.uploadedAt <= 7 * oneDay);
-    } else if (modifiedFilter === "month") {
+    } else if (modifiedFilter === "30days" || modifiedFilter === "month") {
       filteredFiles = filteredFiles.filter((f) => now - f.uploadedAt <= 30 * oneDay);
+    } else if (modifiedFilter === "this_year") {
+      filteredFiles = filteredFiles.filter((f) => f.uploadedAt >= startOfThisYear);
+    } else if (modifiedFilter === "last_year") {
+      filteredFiles = filteredFiles.filter(
+        (f) => f.uploadedAt >= startOfLastYear && f.uploadedAt < startOfThisYear
+      );
+    } else if (modifiedFilter === "custom" && customStartDate && customEndDate) {
+      filteredFiles = filteredFiles.filter(
+        (f) => f.uploadedAt >= customStartDate && f.uploadedAt <= customEndDate
+      );
     }
   }
 
@@ -830,6 +848,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             <button
               onClick={() => {
                 setShowModifiedDropdown(!showModifiedDropdown);
+                setPendingModified(modifiedFilter);
                 setShowTypeDropdown(false);
               }}
               className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 transition cursor-pointer font-medium ${
@@ -838,7 +857,21 @@ export const DrivePage: React.FC<DrivePageProps> = ({
                   : "border-[#444746] hover:bg-[#282a2c] text-[#e3e3e3]"
               }`}
             >
-              <span>{modifiedFilter === "all" ? "Modified" : `Modified: ${modifiedFilter}`}</span>
+              <span>
+                {modifiedFilter === "today"
+                  ? "Modified: Today"
+                  : modifiedFilter === "7days" || modifiedFilter === "week"
+                  ? "Modified: Last 7 days"
+                  : modifiedFilter === "30days" || modifiedFilter === "month"
+                  ? "Modified: Last 30 days"
+                  : modifiedFilter === "this_year"
+                  ? `Modified: This year (${currentYear})`
+                  : modifiedFilter === "last_year"
+                  ? `Modified: Last year (${currentYear - 1})`
+                  : modifiedFilter === "custom"
+                  ? "Modified: Custom range"
+                  : "Modified"}
+              </span>
               <ChevronDown className="w-3.5 h-3.5 text-[#9aa0a6]" />
             </button>
 
@@ -848,27 +881,106 @@ export const DrivePage: React.FC<DrivePageProps> = ({
                   className="fixed inset-0 z-30"
                   onClick={() => setShowModifiedDropdown(false)}
                 />
-                <div className="absolute left-0 top-9 z-40 w-44 bg-[#1e1f20] border border-[#444746] rounded-xl shadow-xl py-1 text-xs text-[#e3e3e3]">
+                <div className="absolute left-0 top-9 z-40 w-64 bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none">
                   {[
-                    { id: "all", label: "All time" },
                     { id: "today", label: "Today" },
-                    { id: "week", label: "Last 7 days" },
-                    { id: "month", label: "Last 30 days" },
-                  ].map((m) => (
+                    { id: "7days", label: "Last 7 days" },
+                    { id: "30days", label: "Last 30 days" },
+                    { id: "this_year", label: `This year (${currentYear})` },
+                    { id: "last_year", label: `Last year (${currentYear - 1})` },
+                  ].map((m) => {
+                    const isSelected = pendingModified === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => setPendingModified(m.id)}
+                        className={`w-full text-left px-4 py-2 hover:bg-white/10 flex items-center justify-between transition cursor-pointer ${
+                          isSelected ? "bg-[#004a77]/35 text-white font-medium" : "text-[#e3e3e3]"
+                        }`}
+                      >
+                        <span>{m.label}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#7CB8F8]" />}
+                      </button>
+                    );
+                  })}
+
+                  {/* Custom date range */}
+                  <button
+                    onClick={() => {
+                      setPendingModified("custom");
+                      setShowCustomRange(!showCustomRange);
+                    }}
+                    className={`w-full text-left px-4 py-2 hover:bg-white/10 flex items-center justify-between transition cursor-pointer ${
+                      pendingModified === "custom"
+                        ? "bg-[#004a77]/35 text-white font-medium"
+                        : "text-[#e3e3e3]"
+                    }`}
+                  >
+                    <span>Custom date range</span>
+                    <ChevronRight className="w-4 h-4 text-[#9aa0a6]" />
+                  </button>
+
+                  {/* Custom Range Inputs */}
+                  {showCustomRange && (
+                    <div className="p-3 mx-2 my-1.5 bg-[#141517] rounded-xl border border-white/10 space-y-2">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-[#9aa0a6] w-10">From:</span>
+                        <input
+                          type="date"
+                          onChange={(e) =>
+                            setCustomStartDate(
+                              e.target.value ? new Date(e.target.value).getTime() : null
+                            )
+                          }
+                          className="bg-[#1e1f20] border border-white/10 rounded px-2 py-1 text-xs text-white outline-none w-full"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-[#9aa0a6] w-10">To:</span>
+                        <input
+                          type="date"
+                          onChange={(e) =>
+                            setCustomEndDate(
+                              e.target.value ? new Date(e.target.value).getTime() + 86400000 : null
+                            )
+                          }
+                          className="bg-[#1e1f20] border border-white/10 rounded px-2 py-1 text-xs text-white outline-none w-full"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer (Clear all | Cancel | Apply) matching screenshot */}
+                  <div className="mt-2 pt-2.5 border-t border-white/10 px-4 flex items-center justify-between text-xs">
                     <button
-                      key={m.id}
                       onClick={() => {
-                        setModifiedFilter(m.id);
+                        setModifiedFilter("all");
+                        setPendingModified("all");
+                        setShowCustomRange(false);
                         setShowModifiedDropdown(false);
                       }}
-                      className={`w-full text-left px-3.5 py-2 hover:bg-white/10 flex items-center justify-between transition ${
-                        modifiedFilter === m.id ? "text-[#7CB8F8] font-semibold" : ""
-                      }`}
+                      className="text-[#9aa0a6] hover:text-white transition cursor-pointer"
                     >
-                      <span>{m.label}</span>
-                      {modifiedFilter === m.id && <Check className="w-3.5 h-3.5" />}
+                      Clear all
                     </button>
-                  ))}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setShowModifiedDropdown(false)}
+                        className="text-[#7CB8F8] hover:underline font-medium transition cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          setModifiedFilter(pendingModified);
+                          setShowModifiedDropdown(false);
+                        }}
+                        className="text-white hover:text-[#7CB8F8] font-medium transition cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </>
             )}

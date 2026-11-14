@@ -44,6 +44,7 @@ export interface DriveFile {
   isStarred?: boolean;
   isDeleted?: boolean;
   chunkMsgIds?: number[]; // For files split into multiple Telegram messages
+  thumbnail?: string; // Base64 data URL for instant image thumbnail preview
 }
 
 export interface TransferItem {

@@ -8,6 +8,46 @@ export interface UploadProgress {
   percentage: number;
 }
 
+async function generateThumbnail(file: File): Promise<string | undefined> {
+  if (!file.type.startsWith("image/")) return undefined;
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const maxDim = 200;
+        let w = img.width;
+        let h = img.height;
+        if (w > h && w > maxDim) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else if (h > maxDim) {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.65));
+        } else {
+          resolve(undefined);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(undefined);
+      };
+      img.src = url;
+    } catch {
+      resolve(undefined);
+    }
+  });
+}
+
 export async function uploadFileToChannel(
   channelId: string,
   file: File,
@@ -17,8 +57,12 @@ export async function uploadFileToChannel(
   const client = getClient();
   const peer = await client.getEntity(channelId);
 
-  // Convert browser File to Buffer for GramJS CustomFile
-  const arrayBuffer = await file.arrayBuffer();
+  // Generate thumbnail in background while preparing file buffer
+  const [arrayBuffer, thumbnail] = await Promise.all([
+    file.arrayBuffer(),
+    generateThumbnail(file),
+  ]);
+
   const buffer = Buffer.from(arrayBuffer);
   const customFile = new CustomFile(file.name, file.size, "", buffer);
 
@@ -49,6 +93,7 @@ export async function uploadFileToChannel(
     folderId,
     isStarred: false,
     isDeleted: false,
+    thumbnail,
   };
 
   return driveFile;

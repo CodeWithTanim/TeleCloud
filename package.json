@@ -50,7 +50,8 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "build/icon.ico"
+      "build/icon.ico",
+      "build/icon.png"
     ],
     "win": {
       "target": [

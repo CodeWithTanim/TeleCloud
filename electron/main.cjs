@@ -1,14 +1,29 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+// Ensure Windows Taskbar links and pins correctly with custom application icon and AUMI
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.telecloud.app');
+}
+
 let mainWindow = null;
 
-function createWindow() {
-  let iconPath = path.join(__dirname, '../build/icon.ico');
-  if (!fs.existsSync(iconPath)) {
-    iconPath = undefined;
+function getAppIcon() {
+  const icoPath = path.join(__dirname, '../build/icon.ico');
+  const pngPath = path.join(__dirname, '../build/icon.png');
+  
+  if (fs.existsSync(icoPath)) {
+    return nativeImage.createFromPath(icoPath);
   }
+  if (fs.existsSync(pngPath)) {
+    return nativeImage.createFromPath(pngPath);
+  }
+  return undefined;
+}
+
+function createWindow() {
+  const appIcon = getAppIcon();
 
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -16,7 +31,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     backgroundColor: '#0a0a0c',
-    icon: iconPath,
+    icon: appIcon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,

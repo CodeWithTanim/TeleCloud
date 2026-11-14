@@ -121,9 +121,6 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             return cat === "markdown" || lowerName.endsWith(".md");
           case "html":
             return cat === "html" || lowerName.endsWith(".html") || lowerName.endsWith(".htm");
-          case "gemini_gems":
-          case "gemini_conv":
-            return lowerName.includes("gemini");
           case "forms":
             return lowerName.includes("form");
           case "pdfs":
@@ -502,28 +499,6 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       icon: (
         <div className="w-4.5 h-4.5 rounded-[4px] bg-[#e64a19] flex items-center justify-center shadow-xs text-white font-bold text-[8px] font-mono leading-none">
           &lt;&gt;
-        </div>
-      ),
-    },
-    {
-      id: "gemini_gems",
-      label: "Gemini Gems",
-      icon: (
-        <div className="w-4.5 h-4.5 flex items-center justify-center text-[#1a73e8]">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-[#1a73e8] stroke-2">
-            <path d="M6 3h12l4 7-10 11L2 10z" />
-          </svg>
-        </div>
-      ),
-    },
-    {
-      id: "gemini_conv",
-      label: "Gemini Conversations",
-      icon: (
-        <div className="w-4.5 h-4.5 flex items-center justify-center text-[#1a73e8]">
-          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-[#1a73e8]">
-            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5z" />
-          </svg>
         </div>
       ),
     },

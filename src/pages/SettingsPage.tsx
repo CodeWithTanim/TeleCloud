@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { KeyRound, Layers, LogOut, Save, Check } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
+import { MosaicCredentialField } from "../components/common/MosaicCredentialField";
 
 export const SettingsPage: React.FC = () => {
   const { apiId, apiHash, user, activeChannel, clearActiveChannel, setCredentials, logout } =
@@ -64,27 +65,24 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#A8C7FA] mb-1.5">
+              <label className="block text-xs font-medium text-[#9aa0a6] mb-1.5">
                 API ID
               </label>
               <input
                 type="text"
                 value={editApiId}
                 onChange={(e) => setEditApiId(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] text-white font-mono text-sm focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 outline-none"
+                className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] text-white font-mono text-sm focus:border-[#7CB8F8] focus:ring-2 focus:ring-[#7CB8F8]/20 outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#A8C7FA] mb-1.5">
-                API Hash
-              </label>
-              <input
-                type="password"
+              <MosaicCredentialField
+                label="API Hash"
                 value={editApiHash}
-                onChange={(e) => setEditApiHash(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] text-white font-mono text-sm focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 outline-none"
+                onChange={setEditApiHash}
+                placeholder="Enter API Hash"
               />
             </div>
           </div>

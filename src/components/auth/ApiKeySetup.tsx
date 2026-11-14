@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { KeyRound, ShieldCheck, ExternalLink, ArrowRight, Info } from "lucide-react";
 import { BrandLogo } from "../common/BrandLogo";
+import { MosaicCredentialField } from "../common/MosaicCredentialField";
 import { useAuthStore } from "../../stores/authStore";
 
 export const ApiKeySetup: React.FC = () => {
@@ -70,18 +71,14 @@ export const ApiKeySetup: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#A8C7FA] mb-1.5">
-              Telegram API Hash
-            </label>
-            <input
-              type="password"
-              placeholder="e.g. 457f14bd4e74ea235a9c72627..."
+            <MosaicCredentialField
+              label="Telegram API Hash"
               value={apiHash}
-              onChange={(e) => {
-                setApiHash(e.target.value);
+              onChange={(val) => {
+                setApiHash(val);
                 setError(null);
               }}
-              className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] hover:border-white/[0.16] focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 text-white placeholder-neutral-500 font-mono text-sm transition outline-none"
+              placeholder="e.g. 457f14bd4e74ea235a9c72627..."
             />
           </div>
 

@@ -16,6 +16,7 @@ import {
   Users,
   AlertCircle,
   Cloud,
+  Folder,
   FolderPlus,
   FileUp,
   FolderUp,
@@ -109,11 +110,52 @@ export const DrivePage: React.FC<DrivePageProps> = ({
 
   // Type filter chip
   if (selectedType !== "all") {
-    filteredFolders = [];
-    filteredFiles = filteredFiles.filter((f) => {
-      const cat = getFileCategory(f.mimeType, f.name);
-      return cat === selectedType;
-    });
+    if (selectedType === "folders") {
+      filteredFiles = [];
+    } else {
+      filteredFolders = [];
+      filteredFiles = filteredFiles.filter((f) => {
+        const cat = getFileCategory(f.mimeType, f.name);
+        const lowerName = f.name.toLowerCase();
+        switch (selectedType) {
+          case "documents":
+            return cat === "document";
+          case "spreadsheets":
+            return cat === "spreadsheet";
+          case "presentations":
+            return cat === "presentation";
+          case "pics":
+          case "photos":
+            return cat === "image";
+          case "vids":
+          case "videos":
+            return cat === "video";
+          case "markdown":
+            return cat === "markdown" || lowerName.endsWith(".md");
+          case "html":
+            return cat === "html" || lowerName.endsWith(".html") || lowerName.endsWith(".htm");
+          case "gemini_gems":
+          case "gemini_conv":
+            return lowerName.includes("gemini");
+          case "forms":
+            return lowerName.includes("form");
+          case "pdfs":
+            return cat === "pdf";
+          case "archives":
+            return cat === "archive";
+          case "audio":
+            return cat === "audio";
+          case "drawings":
+            return cat === "drawing";
+          case "sites":
+            return lowerName.includes("site");
+          case "shortcuts":
+            return false;
+          default:
+            return cat === selectedType;
+        }
+      });
+    }
   }
 
   // Modified filter chip
@@ -370,6 +412,207 @@ export const DrivePage: React.FC<DrivePageProps> = ({
         }
       : null;
 
+  const TYPE_OPTIONS = [
+    {
+      id: "folders",
+      label: "Folders",
+      icon: <Folder className="w-4.5 h-4.5 text-[#9aa0a6] fill-[#9aa0a6]" />,
+    },
+    {
+      id: "documents",
+      label: "Documents",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#2684fc] flex items-center justify-center p-0.5 shadow-xs">
+          <div className="w-full flex flex-col gap-0.5 justify-center">
+            <div className="w-full h-0.5 bg-white rounded-full" />
+            <div className="w-2.5 h-0.5 bg-white rounded-full" />
+            <div className="w-2 h-0.5 bg-white rounded-full" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "spreadsheets",
+      label: "Spreadsheets",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#00ac47] flex items-center justify-center p-0.5 shadow-xs">
+          <div className="w-2.5 h-2.5 border border-white flex items-center justify-center">
+            <div className="w-full h-px bg-white" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "presentations",
+      label: "Presentations",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#ffba00] flex items-center justify-center p-0.5 shadow-xs">
+          <div className="w-2.5 h-2 border border-white rounded-[1px]" />
+        </div>
+      ),
+    },
+    {
+      id: "pics",
+      label: "Pics",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#ea4335] flex items-center justify-center p-0.5 shadow-xs">
+          <svg viewBox="0 0 16 16" className="w-3 h-3 fill-white">
+            <path d="M1 13h14l-4.5-6-3.5 4.5-2.5-3z" />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      id: "vids",
+      label: "Vids",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#5e35b1] flex items-center justify-center p-0.5 shadow-xs">
+          <svg viewBox="0 0 16 16" className="w-2.5 h-2.5 fill-white">
+            <path d="M4 3l9 5-9 5z" />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      id: "markdown",
+      label: "Markdown",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#1976d2] flex items-center justify-center shadow-xs text-white font-bold text-[8px] font-mono leading-none">
+          M↓
+        </div>
+      ),
+    },
+    {
+      id: "html",
+      label: "HTML",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#e64a19] flex items-center justify-center shadow-xs text-white font-bold text-[8px] font-mono leading-none">
+          &lt;&gt;
+        </div>
+      ),
+    },
+    {
+      id: "gemini_gems",
+      label: "Gemini Gems",
+      icon: (
+        <div className="w-4.5 h-4.5 flex items-center justify-center text-[#1a73e8]">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-[#1a73e8] stroke-2">
+            <path d="M6 3h12l4 7-10 11L2 10z" />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      id: "gemini_conv",
+      label: "Gemini Conversations",
+      icon: (
+        <div className="w-4.5 h-4.5 flex items-center justify-center text-[#1a73e8]">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-[#1a73e8]">
+            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5z" />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      id: "forms",
+      label: "Forms",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#7248b9] flex items-center justify-center p-0.5 shadow-xs">
+          <div className="flex flex-col gap-0.5 w-2.5">
+            <div className="w-full h-0.5 bg-white rounded-full" />
+            <div className="w-full h-0.5 bg-white rounded-full" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "photos",
+      label: "Photos & images",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#ea4335] flex items-center justify-center p-0.5 shadow-xs">
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white">
+            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      id: "pdfs",
+      label: "PDFs",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#ea4335] flex items-center justify-center shadow-xs text-white font-black text-[7px] tracking-tighter">
+          PDF
+        </div>
+      ),
+    },
+    {
+      id: "videos",
+      label: "Videos",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#ea4335] flex items-center justify-center p-0.5 shadow-xs">
+          <svg viewBox="0 0 24 24" className="w-3 h-3 fill-white">
+            <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z" />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      id: "archives",
+      label: "Archives (zip)",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#607d8b] flex items-center justify-center p-0.5 shadow-xs">
+          <div className="w-1.5 h-3 border-x border-dashed border-white/80" />
+        </div>
+      ),
+    },
+    {
+      id: "audio",
+      label: "Audio",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#ea4335] flex items-center justify-center p-0.5 shadow-xs">
+          <svg viewBox="0 0 24 24" className="w-3 h-3 fill-white">
+            <path d="M12 3a9 9 0 00-9 9v7c0 1.1.9 2 2 2h2v-8H5v-1a7 7 0 0114 0v1h-2v8h2c1.1 0 2-.9 2-2v-7a9 9 0 00-9-9z" />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      id: "drawings",
+      label: "Drawings",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#ea4335] flex items-center justify-center p-0.5 shadow-xs">
+          <svg viewBox="0 0 16 16" className="w-3 h-3 fill-white">
+            <circle cx="5" cy="5" r="3" />
+            <rect x="7" y="7" width="6" height="6" rx="0.5" />
+          </svg>
+        </div>
+      ),
+    },
+    {
+      id: "sites",
+      label: "Sites",
+      icon: (
+        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#5c6bc0] flex items-center justify-center p-0.5 shadow-xs">
+          <div className="w-2.5 h-2 border border-white flex flex-col justify-between">
+            <div className="w-full h-0.5 bg-white" />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "shortcuts",
+      label: "Shortcuts",
+      icon: (
+        <div className="w-4.5 h-4.5 flex items-center justify-center text-[#9aa0a6]">
+          <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2">
+            <path d="M9 14l-4-4 4-4" />
+            <path d="M5 10h11a4 4 0 110 8h-1" />
+          </svg>
+        </div>
+      ),
+    },
+  ];
+
   const isEmpty = filteredFolders.length === 0 && filteredFiles.length === 0;
 
   return (
@@ -533,7 +776,11 @@ export const DrivePage: React.FC<DrivePageProps> = ({
                   : "border-[#444746] hover:bg-[#282a2c] text-[#e3e3e3]"
               }`}
             >
-              <span>{selectedType === "all" ? "Type" : `Type: ${selectedType}`}</span>
+              <span>
+                {selectedType === "all"
+                  ? "Type"
+                  : `Type: ${TYPE_OPTIONS.find((t) => t.id === selectedType)?.label || selectedType}`}
+              </span>
               <ChevronDown className="w-3.5 h-3.5 text-[#9aa0a6]" />
             </button>
 
@@ -543,30 +790,25 @@ export const DrivePage: React.FC<DrivePageProps> = ({
                   className="fixed inset-0 z-30"
                   onClick={() => setShowTypeDropdown(false)}
                 />
-                <div className="absolute left-0 top-9 z-40 w-44 bg-[#1e1f20] border border-[#444746] rounded-xl shadow-xl py-1 text-xs text-[#e3e3e3]">
-                  {[
-                    { id: "all", label: "All types" },
-                    { id: "pdf", label: "PDFs" },
-                    { id: "image", label: "Photos & images" },
-                    { id: "document", label: "Documents" },
-                    { id: "spreadsheet", label: "Spreadsheets" },
-                    { id: "video", label: "Videos" },
-                    { id: "audio", label: "Audio" },
-                    { id: "archive", label: "Archives" },
-                    { id: "code", label: "Code" },
-                  ].map((t) => (
+                <div className="absolute left-0 top-9 z-40 w-60 max-h-[70vh] overflow-y-auto bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none">
+                  {TYPE_OPTIONS.map((t) => (
                     <button
                       key={t.id}
                       onClick={() => {
-                        setSelectedType(t.id);
+                        setSelectedType(selectedType === t.id ? "all" : t.id);
                         setShowTypeDropdown(false);
                       }}
-                      className={`w-full text-left px-3.5 py-2 hover:bg-white/10 flex items-center justify-between transition ${
-                        selectedType === t.id ? "text-[#7CB8F8] font-semibold" : ""
+                      className={`w-full text-left px-4 py-2 hover:bg-white/10 flex items-center justify-between transition cursor-pointer ${
+                        selectedType === t.id ? "bg-[#004a77]/35 text-white font-medium" : "text-[#e3e3e3]"
                       }`}
                     >
-                      <span>{t.label}</span>
-                      {selectedType === t.id && <Check className="w-3.5 h-3.5" />}
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <span className="shrink-0">{t.icon}</span>
+                        <span className="truncate">{t.label}</span>
+                      </div>
+                      {selectedType === t.id && (
+                        <Check className="w-3.5 h-3.5 text-[#7CB8F8] shrink-0" />
+                      )}
                     </button>
                   ))}
                 </div>

@@ -18,6 +18,36 @@ export function formatDate(timestamp: number): string {
 
 export function getFileCategory(mimeType: string, fileName: string): string {
   const lowerName = fileName.toLowerCase();
+  if (mimeType.includes("pdf") || lowerName.endsWith(".pdf")) {
+    return "pdf";
+  }
+  if (/\.(md|markdown)$/.test(lowerName)) {
+    return "markdown";
+  }
+  if (/\.(html|htm)$/.test(lowerName) || mimeType.includes("html")) {
+    return "html";
+  }
+  if (
+    mimeType.includes("presentation") ||
+    mimeType.includes("powerpoint") ||
+    /\.(ppt|pptx|key|odp)$/.test(lowerName)
+  ) {
+    return "presentation";
+  }
+  if (
+    mimeType.includes("sheet") ||
+    mimeType.includes("excel") ||
+    /\.(xls|xlsx|csv|ods)$/.test(lowerName)
+  ) {
+    return "spreadsheet";
+  }
+  if (
+    mimeType.includes("word") ||
+    mimeType.includes("document") ||
+    /\.(doc|docx|odt|rtf|txt)$/.test(lowerName)
+  ) {
+    return "document";
+  }
   if (mimeType.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|svg|bmp|ico)$/.test(lowerName)) {
     return "image";
   }
@@ -27,23 +57,6 @@ export function getFileCategory(mimeType: string, fileName: string): string {
   if (mimeType.startsWith("audio/") || /\.(mp3|wav|ogg|flac|m4a|aac)$/.test(lowerName)) {
     return "audio";
   }
-  if (mimeType.includes("pdf") || lowerName.endsWith(".pdf")) {
-    return "pdf";
-  }
-  if (
-    mimeType.includes("word") ||
-    mimeType.includes("document") ||
-    /\.(doc|docx|odt|rtf|txt)$/.test(lowerName)
-  ) {
-    return "document";
-  }
-  if (
-    mimeType.includes("sheet") ||
-    mimeType.includes("excel") ||
-    /\.(xls|xlsx|csv)$/.test(lowerName)
-  ) {
-    return "spreadsheet";
-  }
   if (
     mimeType.includes("zip") ||
     mimeType.includes("compressed") ||
@@ -52,7 +65,10 @@ export function getFileCategory(mimeType: string, fileName: string): string {
   ) {
     return "archive";
   }
-  if (/\.(js|ts|jsx|tsx|py|java|c|cpp|cs|go|rs|php|html|css|json|md)$/.test(lowerName)) {
+  if (/\.(drawio|sketch|fig|xd)$/.test(lowerName)) {
+    return "drawing";
+  }
+  if (/\.(js|ts|jsx|tsx|py|java|c|cpp|cs|go|rs|php|css|json)$/.test(lowerName)) {
     return "code";
   }
   return "other";

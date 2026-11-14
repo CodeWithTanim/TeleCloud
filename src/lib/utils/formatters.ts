@@ -27,11 +27,13 @@ export function getFileCategory(mimeType: string, fileName: string): string {
   if (mimeType.startsWith("audio/") || /\.(mp3|wav|ogg|flac|m4a|aac)$/.test(lowerName)) {
     return "audio";
   }
+  if (mimeType.includes("pdf") || lowerName.endsWith(".pdf")) {
+    return "pdf";
+  }
   if (
-    mimeType.includes("pdf") ||
     mimeType.includes("word") ||
     mimeType.includes("document") ||
-    /\.(pdf|doc|docx|odt|rtf|txt)$/.test(lowerName)
+    /\.(doc|docx|odt|rtf|txt)$/.test(lowerName)
   ) {
     return "document";
   }

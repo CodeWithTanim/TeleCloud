@@ -627,7 +627,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       )}
 
       {/* Workspace Header: Title & View Switcher */}
-      <div className="px-6 pt-5 pb-3 shrink-0">
+      <div className="px-6 pt-5 pb-3 shrink-0 relative z-20">
         <div className="flex items-center justify-between mb-3">
           {/* Breadcrumbs or Page Title */}
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -763,12 +763,13 @@ export const DrivePage: React.FC<DrivePageProps> = ({
         </div>
       </div>
 
-        {/* Filter Chips row (Type ▾ | People ▾ | Modified ▾ | Source ▾) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        {/* Filter Chips row (Type ▾ | Modified ▾) */}
+        <div className="flex items-center gap-2 pb-1 text-xs relative z-30">
           {/* Type Filter */}
-          <div className="relative">
+          <div className={`relative ${showTypeDropdown ? "z-50" : "z-20"}`}>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setShowTypeDropdown(!showTypeDropdown);
                 setShowModifiedDropdown(false);
               }}
@@ -789,10 +790,10 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             {showTypeDropdown && (
               <>
                 <div
-                  className="fixed inset-0 z-30"
+                  className="fixed inset-0 z-40"
                   onClick={() => setShowTypeDropdown(false)}
                 />
-                <div className="absolute left-0 top-9 z-40 w-60 max-h-[70vh] overflow-y-auto bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none">
+                <div className="absolute left-0 top-10 z-50 w-64 max-h-[65vh] overflow-y-auto bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none">
                   {TYPE_OPTIONS.map((t) => (
                     <button
                       key={t.id}
@@ -819,9 +820,10 @@ export const DrivePage: React.FC<DrivePageProps> = ({
           </div>
 
           {/* Modified Filter */}
-          <div className="relative">
+          <div className={`relative ${showModifiedDropdown ? "z-50" : "z-20"}`}>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setShowModifiedDropdown(!showModifiedDropdown);
                 setPendingModified(modifiedFilter);
                 setShowTypeDropdown(false);
@@ -853,10 +855,10 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             {showModifiedDropdown && (
               <>
                 <div
-                  className="fixed inset-0 z-30"
+                  className="fixed inset-0 z-40"
                   onClick={() => setShowModifiedDropdown(false)}
                 />
-                <div className="absolute left-0 top-9 z-40 w-64 bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none">
+                <div className="absolute left-0 top-10 z-50 w-64 bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none">
                   {[
                     { id: "today", label: "Today" },
                     { id: "7days", label: "Last 7 days" },

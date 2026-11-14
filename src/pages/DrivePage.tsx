@@ -129,10 +129,6 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             return cat === "archive";
           case "audio":
             return cat === "audio";
-          case "drawings":
-            return cat === "drawing";
-          case "sites":
-            return lowerName.includes("site");
           case "shortcuts":
             return false;
           default:
@@ -562,29 +558,6 @@ export const DrivePage: React.FC<DrivePageProps> = ({
           <svg viewBox="0 0 24 24" className="w-3 h-3 fill-white">
             <path d="M12 3a9 9 0 00-9 9v7c0 1.1.9 2 2 2h2v-8H5v-1a7 7 0 0114 0v1h-2v8h2c1.1 0 2-.9 2-2v-7a9 9 0 00-9-9z" />
           </svg>
-        </div>
-      ),
-    },
-    {
-      id: "drawings",
-      label: "Drawings",
-      icon: (
-        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#ea4335] flex items-center justify-center p-0.5 shadow-xs">
-          <svg viewBox="0 0 16 16" className="w-3 h-3 fill-white">
-            <circle cx="5" cy="5" r="3" />
-            <rect x="7" y="7" width="6" height="6" rx="0.5" />
-          </svg>
-        </div>
-      ),
-    },
-    {
-      id: "sites",
-      label: "Sites",
-      icon: (
-        <div className="w-4.5 h-4.5 rounded-[4px] bg-[#5c6bc0] flex items-center justify-center p-0.5 shadow-xs">
-          <div className="w-2.5 h-2 border border-white flex flex-col justify-between">
-            <div className="w-full h-0.5 bg-white" />
-          </div>
         </div>
       ),
     },

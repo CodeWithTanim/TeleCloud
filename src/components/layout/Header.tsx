@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search, SlidersHorizontal, Settings, RefreshCw, CheckCircle2, User } from "lucide-react";
-import { GoogleDriveLogo } from "../common/GoogleDriveLogo";
+import { TeleCloudLogo } from "../common/TeleCloudLogo";
 import { useFileStore } from "../../stores/fileStore";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ onRefresh, onOpenSettings }) => 
     <header className="h-16 px-4 sm:px-6 bg-[#0E0E0E] flex items-center justify-between shrink-0 gap-4 select-none border-b border-transparent">
       {/* Left: Brand Logo & Title */}
       <div className="flex items-center min-w-[240px]">
-        <GoogleDriveLogo size="md" showText={true} />
+        <TeleCloudLogo size="md" showText={true} />
       </div>
 
       {/* Middle: Google Drive Search Bar */}

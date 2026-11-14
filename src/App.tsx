@@ -5,7 +5,7 @@ import { useFileStore } from "./stores/fileStore";
 import { ApiKeySetup } from "./components/auth/ApiKeySetup";
 import { TelegramLogin } from "./components/auth/TelegramLogin";
 import { ChannelSetup } from "./components/auth/ChannelSetup";
-import { GoogleDriveLogo } from "./components/common/GoogleDriveLogo";
+import { TeleCloudLogo } from "./components/common/TeleCloudLogo";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { DrivePage } from "./pages/DrivePage";
@@ -40,10 +40,10 @@ export const App: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen w-screen bg-[#0E0E0E] flex flex-col items-center justify-center gap-4 text-neutral-400 select-none">
-        <GoogleDriveLogo size="lg" showText={true} />
+        <TeleCloudLogo size="lg" showText={true} />
         <div className="flex items-center gap-2 text-xs text-[#9aa0a6] mt-2">
           <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#7CB8F8]" />
-          <span>Starting Drive...</span>
+          <span>Starting TeleCloud...</span>
         </div>
       </div>
     );

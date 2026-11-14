@@ -404,9 +404,9 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       message: `All ${trashedCount} item(s) in trash will be permanently deleted from Telegram. You cannot undo this action.`,
       confirmText: "Empty trash",
       isDanger: true,
-      onConfirm: async () => {
-        await emptyTrash(channelId);
+      onConfirm: () => {
         setConfirmModalState(null);
+        emptyTrash(channelId);
       },
     });
   };
@@ -421,10 +421,11 @@ export const DrivePage: React.FC<DrivePageProps> = ({
         message: `${count} selected item(s) will be permanently deleted from Telegram. You cannot undo this action.`,
         confirmText: "Delete forever",
         isDanger: true,
-        onConfirm: async () => {
-          await deleteMultiplePermanently(channelId, selectedIds);
+        onConfirm: () => {
+          const idsToDelete = [...selectedIds];
           setSelectedIds([]);
           setConfirmModalState(null);
+          deleteMultiplePermanently(channelId, idsToDelete);
         },
       });
     } else {
@@ -434,12 +435,13 @@ export const DrivePage: React.FC<DrivePageProps> = ({
         confirmText: "Move to trash",
         isDanger: true,
         onConfirm: () => {
-          for (const id of selectedIds) {
+          const idsToTrash = [...selectedIds];
+          setSelectedIds([]);
+          setConfirmModalState(null);
+          for (const id of idsToTrash) {
             const isFolder = folders.some((f) => f.id === id);
             moveToTrash(channelId, id, isFolder);
           }
-          setSelectedIds([]);
-          setConfirmModalState(null);
         },
       });
     }

@@ -333,16 +333,41 @@ export const useFileStore = create<FileState>((set, get) => ({
 
   emptyTrash: async (channelId: string) => {
     const { files, folders } = get();
-    const trashedFiles = files.filter((f) => f.isDeleted);
-    const messagesToDelete: number[] = [];
 
-    for (const f of trashedFiles) {
-      if (f.messageId) messagesToDelete.push(f.messageId);
-      if (f.chunkMsgIds) messagesToDelete.push(...f.chunkMsgIds);
+    // Find all trashed folders and their descendant subfolders
+    const trashedFolderIds = new Set<string>();
+    for (const f of folders) {
+      if (f.isDeleted) {
+        trashedFolderIds.add(f.id);
+      }
+    }
+    let added = true;
+    while (added) {
+      added = false;
+      for (const f of folders) {
+        if (f.parentId && trashedFolderIds.has(f.parentId) && !trashedFolderIds.has(f.id)) {
+          trashedFolderIds.add(f.id);
+          added = true;
+        }
+      }
     }
 
-    const nextFiles = files.filter((f) => !f.isDeleted);
-    const nextFolders = folders.filter((f) => !f.isDeleted);
+    const messagesToDelete: number[] = [];
+
+    for (const f of files) {
+      const isTrashed = f.isDeleted || (f.folderId && trashedFolderIds.has(f.folderId));
+      if (isTrashed) {
+        if (f.messageId) messagesToDelete.push(f.messageId);
+        if (f.chunkMsgIds) messagesToDelete.push(...f.chunkMsgIds);
+      }
+    }
+
+    const nextFiles = files.filter(
+      (f) => !f.isDeleted && (!f.folderId || !trashedFolderIds.has(f.folderId))
+    );
+    const nextFolders = folders.filter(
+      (f) => !f.isDeleted && !trashedFolderIds.has(f.id)
+    );
 
     set({ files: nextFiles, folders: nextFolders, isSaving: true });
     try {
@@ -350,6 +375,8 @@ export const useFileStore = create<FileState>((set, get) => ({
         await deleteTelegramMessages(channelId, messagesToDelete);
       }
       await saveDriveIndex(channelId, nextFiles, nextFolders);
+    } catch (err) {
+      console.error("[fileStore] Error emptying trash:", err);
     } finally {
       set({ isSaving: false });
     }

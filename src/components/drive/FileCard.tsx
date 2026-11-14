@@ -131,7 +131,7 @@ export const FileCard: React.FC<FileCardProps> = ({
     >
       {/* Top action buttons (Pin, Star & Menu) */}
       <div
-        className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1"
+        className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1"
         onClick={(e) => e.stopPropagation()}
       >
         {isFolder && folder?.isPinned && !item.isDeleted && (

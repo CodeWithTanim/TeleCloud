@@ -763,7 +763,9 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       )}
 
       {/* Workspace Header: Title & View Switcher */}
-      <div className="px-3 sm:px-6 pt-3 sm:pt-5 pb-2 sm:pb-3 shrink-0 relative z-20">
+      <div className={`px-3 sm:px-6 pt-3 sm:pt-5 pb-2 sm:pb-3 shrink-0 relative ${
+        showDriveMenu || showTypeDropdown || showModifiedDropdown ? "z-40" : "z-20"
+      }`}>
         <div className="flex items-center justify-between mb-3">
           {/* Breadcrumbs or Page Title */}
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -787,7 +789,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
                 </React.Fragment>
               ))
             ) : (
-              <div className="relative">
+              <div className={`relative ${showDriveMenu ? "z-50" : "z-10"}`}>
                 <button
                   onClick={() => setShowDriveMenu(!showDriveMenu)}
                   className="text-xl sm:text-[22px] font-normal text-white flex items-center gap-1.5 cursor-pointer hover:bg-white/5 px-2.5 py-1 -ml-2 rounded-xl transition"
@@ -901,7 +903,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       </div>
 
         {/* Filter Chips row (Type ▾ | Modified ▾) */}
-        <div className="flex items-center gap-2 pb-1 text-xs relative z-30 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 pb-1 text-xs relative z-10 overflow-x-auto no-scrollbar">
           {/* Type Filter */}
           <div className={`relative ${showTypeDropdown ? "z-50" : "z-20"}`}>
             <button

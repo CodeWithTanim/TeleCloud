@@ -231,6 +231,18 @@ export const FileCard: React.FC<FileCardProps> = ({
                   </button>
                 )}
 
+                {/* Star / Unstar option */}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    onToggleStar(item.id, isFolder);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition cursor-pointer group"
+                >
+                  <Star className={`w-3.5 h-3.5 ${item.isStarred ? "text-[#f4b400] fill-[#f4b400]" : "text-[#9aa0a6] group-hover:text-white"}`} />
+                  <span>{item.isStarred ? "Remove from Starred" : "Add to Starred"}</span>
+                </button>
+
                 {/* Divider */}
                 <div className="my-1 border-t border-white/10" />
 

@@ -741,7 +741,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       onContextMenu={handleContextMenu}
-      className="relative flex-1 flex flex-col h-[calc(100vh-4rem)] mr-3 mb-3 bg-[#131314] rounded-[24px] border border-white/[0.04] overflow-hidden select-none"
+      className="relative flex-1 flex flex-col h-full md:h-[calc(100vh-4rem)] md:mr-3 md:mb-3 bg-[#131314] rounded-none md:rounded-[24px] border-0 md:border border-white/[0.04] overflow-hidden select-none pb-16 md:pb-0"
     >
       {/* Drag & Drop Visual Overlay */}
       {isDraggingOver && (
@@ -763,7 +763,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       )}
 
       {/* Workspace Header: Title & View Switcher */}
-      <div className="px-6 pt-5 pb-3 shrink-0 relative z-20">
+      <div className="px-3 sm:px-6 pt-3 sm:pt-5 pb-2 sm:pb-3 shrink-0 relative z-20">
         <div className="flex items-center justify-between mb-3">
           {/* Breadcrumbs or Page Title */}
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -901,7 +901,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
       </div>
 
         {/* Filter Chips row (Type ▾ | Modified ▾) */}
-        <div className="flex items-center gap-2 pb-1 text-xs relative z-30">
+        <div className="flex items-center gap-2 pb-1 text-xs relative z-30 overflow-x-auto no-scrollbar">
           {/* Type Filter */}
           <div className={`relative ${showTypeDropdown ? "z-50" : "z-20"}`}>
             <button
@@ -1109,7 +1109,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onContextMenu={handleContextMenu}
-        className="flex-1 overflow-y-auto px-6 pb-6 relative select-none"
+        className="flex-1 overflow-y-auto px-3 sm:px-6 pb-24 md:pb-6 relative select-none"
       >
         {/* Trash Banner with Empty Trash option */}
         {tab === "trash" && (
@@ -1207,7 +1207,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
 
       {/* Floating Selection Bar */}
       {selectedIds.length > 0 && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-40 bg-[#1e1f20] border border-white/15 px-4 py-2 rounded-full shadow-2xl flex items-center gap-3 text-xs text-white animate-in fade-in slide-in-from-bottom-2 duration-150">
+        <div className="fixed md:absolute bottom-20 md:bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-[calc(100vw-24px)] overflow-x-auto bg-[#1e1f20] border border-white/15 px-3 sm:px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 sm:gap-3 text-xs text-white animate-in fade-in slide-in-from-bottom-2 duration-150">
           <span className="font-medium text-[#7CB8F8]">
             {selectedIds.length} {selectedIds.length === 1 ? "item" : "items"} selected
           </span>

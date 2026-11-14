@@ -10,18 +10,22 @@ import {
   Folder,
   Pin,
   PinOff,
+  X,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 import { useFileStore } from "../../stores/fileStore";
 import { formatBytes } from "../../lib/utils/formatters";
 import { ActiveTab } from "../../types";
 import { PinFolderModal } from "../drive/PinFolderModal";
+import { TeleCloudLogo } from "../common/TeleCloudLogo";
 
 interface SidebarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   onOpenUpload: () => void;
   onOpenNewFolder: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -29,6 +33,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   onOpenUpload,
   onOpenNewFolder,
+  isMobileOpen = false,
+  onCloseMobile,
 }) => {
   const { files, folders, currentFolderId, setCurrentFolderId, togglePinFolder } = useFileStore();
   const { activeChannel } = useAuthStore();
@@ -58,8 +64,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onClick={() => {
           setActiveTab(id);
           onClickExtra?.();
+          onCloseMobile?.();
         }}
-        className={`w-full flex items-center justify-between px-4 py-2 rounded-full text-sm font-medium transition cursor-pointer group ${
+        className={`w-full flex items-center justify-between px-4 py-2.5 sm:py-2 rounded-full text-sm font-medium transition cursor-pointer group ${
           isActive
             ? "bg-[#004a77] text-[#c2e7ff] font-semibold"
             : "text-[#c4c7c5] hover:bg-[#1f1f1f] hover:text-[#e3e3e3]"
@@ -73,14 +80,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     );
   };
 
-  return (
-    <aside className="w-64 bg-[#0E0E0E] flex flex-col justify-between h-[calc(100vh-4rem)] shrink-0 select-none pb-4 px-3 overflow-y-auto">
+  const sidebarContent = (
+    <>
       <div className="space-y-4">
         {/* + New Button */}
         <div className="relative pt-2 pb-1">
           <button
             onClick={() => setShowNewMenu(!showNewMenu)}
-            className="h-12 px-5 rounded-2xl bg-[#37393b] hover:bg-[#444649] text-white transition-all duration-150 shadow-md flex items-center gap-3 cursor-pointer group"
+            className="w-full sm:w-auto h-12 px-5 rounded-2xl bg-[#37393b] hover:bg-[#444649] text-white transition-all duration-150 shadow-md flex items-center justify-center sm:justify-start gap-3 cursor-pointer group"
           >
             <Plus className="w-5 h-5 text-white" strokeWidth={2.4} />
             <span className="text-sm font-medium text-white tracking-wide">New</span>
@@ -98,6 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => {
                     setShowNewMenu(false);
                     onOpenNewFolder();
+                    onCloseMobile?.();
                   }}
                   className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer"
                 >
@@ -111,6 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => {
                     setShowNewMenu(false);
                     onOpenUpload();
+                    onCloseMobile?.();
                   }}
                   className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer"
                 >
@@ -122,6 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => {
                     setShowNewMenu(false);
                     onOpenUpload();
+                    onCloseMobile?.();
                   }}
                   className="w-full flex items-center gap-3.5 px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer"
                 >
@@ -148,6 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => setShowPinModal(true)}
                 className="p-1 rounded-md text-[#9aa0a6] hover:text-white hover:bg-white/10 transition cursor-pointer"
                 title="Pin a folder to sidebar"
+                aria-label="Pin a folder"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -180,6 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         onClick={() => {
                           setActiveTab("home");
                           setCurrentFolderId(folder.id);
+                          onCloseMobile?.();
                         }}
                         className="flex-1 flex items-center gap-3 px-4 py-2 min-w-0 text-left cursor-pointer"
                         title={folder.name}
@@ -201,8 +213,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             togglePinFolder(activeChannel.id, folder.id);
                           }
                         }}
-                        className="mr-2 p-1.5 rounded-full text-[#9aa0a6] hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover/pin:opacity-100 transition cursor-pointer shrink-0"
+                        className="mr-2 p-1.5 rounded-full text-[#9aa0a6] hover:text-rose-400 hover:bg-rose-500/10 opacity-100 sm:opacity-0 sm:group-hover/pin:opacity-100 transition cursor-pointer shrink-0"
                         title="Unpin folder from sidebar"
+                        aria-label="Unpin folder"
                       >
                         <PinOff className="w-3.5 h-3.5" />
                       </button>
@@ -233,12 +246,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span className="text-[#e3e3e3] font-normal">{formatBytes(totalUsedBytes)}</span> of Unlimited used
         </p>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar (hidden on mobile) */}
+      <aside className="hidden md:flex w-64 bg-[#0E0E0E] flex-col justify-between h-[calc(100vh-4rem)] shrink-0 select-none pb-4 px-3 overflow-y-auto">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Drawer Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm md:hidden animate-in fade-in duration-200"
+          onClick={onCloseMobile}
+        />
+      )}
+
+      {/* Mobile Drawer (slides in from left) */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-[#141517] border-r border-white/10 flex flex-col justify-between h-full p-4 overflow-y-auto shadow-2xl transition-transform duration-300 ease-out md:hidden select-none ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div>
+          {/* Drawer Top Header with Logo and Close button */}
+          <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/[0.08]">
+            <TeleCloudLogo size="sm" showText={true} />
+            <button
+              onClick={onCloseMobile}
+              className="p-1.5 rounded-full text-[#9aa0a6] hover:text-white hover:bg-white/10 transition cursor-pointer"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          {sidebarContent}
+        </div>
+      </aside>
 
       {/* Pin Folder Modal */}
       <PinFolderModal
         isOpen={showPinModal}
         onClose={() => setShowPinModal(false)}
       />
-    </aside>
+    </>
   );
 };

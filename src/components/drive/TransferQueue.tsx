@@ -22,7 +22,7 @@ export const TransferQueue: React.FC = () => {
   ).length;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in slide-in-from-bottom-5 duration-200">
+    <div className="fixed bottom-20 md:bottom-6 right-3 sm:right-6 z-50 w-[calc(100vw-24px)] sm:w-80 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in slide-in-from-bottom-5 duration-200">
       {/* Header */}
       <div
         onClick={() => setIsOpen(!isOpen)}

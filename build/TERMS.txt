@@ -1,0 +1,42 @@
+====================================================================
+           TeleCloud - Terms & Conditions and License Agreement
+====================================================================
+
+Last Updated: November 2026
+
+Please read the following Terms & Conditions and License Agreement carefully 
+before installing TeleCloud. By proceeding with the installation and using 
+TeleCloud, you agree to be bound by the terms outlined below.
+
+1. END USER LICENSE GRANT
+TeleCloud grants you a personal, non-exclusive, non-transferable, and 
+royalty-free license to install and use this software for accessing and 
+managing your personal cloud files stored via Telegram MTProto.
+
+2. USER PRIVACY & DATA OWNERSHIP
+TeleCloud is designed with privacy and sovereignty in mind:
+- All communications are routed directly through Telegram's official MTProto 
+  servers using end-to-end secure protocols.
+- TeleCloud does not operate intermediate storage servers or log your credentials.
+- Your session tokens, channel bindings, and file metadata remain strictly 
+  within your local environment and your designated private Telegram storage.
+
+3. ACCEPTABLE USE POLICY
+You agree not to use TeleCloud to:
+- Store, distribute, or transmit any illegal, infringing, or malicious content.
+- Violate Telegram's official Terms of Service or MTProto API Fair Usage guidelines.
+- Overload or attempt to disrupt the integrity of Telegram's infrastructure.
+
+4. DISCLAIMER OF WARRANTIES
+TeleCloud is provided on an "AS IS" and "AS AVAILABLE" basis without warranties 
+of any kind, either express or implied. The developers do not guarantee 
+uninterrupted service or absolute protection against third-party API changes 
+enforced by Telegram.
+
+5. TERMINATION & MODIFICATIONS
+This agreement is effective until terminated. You may terminate it at any time 
+by uninstalling TeleCloud and deleting all associated local cached data.
+
+By clicking "I Agree", you acknowledge that you have read, understood, and 
+agree to abide by these terms.
+====================================================================

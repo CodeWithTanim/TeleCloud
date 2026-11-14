@@ -3,12 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "description": "Secure, private, self-configured cloud drive powered by Telegram MTProto",
+  "author": "TeleCloud",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "postinstall": "node scripts/patch-telegram.cjs"
+    "postinstall": "node scripts/patch-telegram.cjs",
+    "electron:dev": "electron .",
+    "electron:build": "tsc && vite build && electron-builder --win nsis"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -28,9 +32,47 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^45.3.2",
+    "electron-builder": "^26.18.0",
     "tailwindcss": "^4.0.9",
     "typescript": "^5.7.3",
     "vite": "^6.2.0",
     "vite-plugin-node-polyfills": "^0.23.0"
+  },
+  "build": {
+    "appId": "com.telecloud.app",
+    "productName": "TeleCloud",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "build/icon.ico"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TeleCloud",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "include": "build/installer.nsh"
+    }
   }
 }

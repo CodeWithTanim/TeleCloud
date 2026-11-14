@@ -20,7 +20,7 @@ export const App: React.FC = () => {
     useAuthStore();
   const { loadIndex } = useFileStore();
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>("drive");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("home");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isNewFolderOpen, setIsNewFolderOpen] = useState(false);
 

@@ -1,21 +1,11 @@
 import React, { useState } from "react";
 import {
   Home,
-  FolderKanban,
-  HardDrive,
-  Laptop,
-  Users,
-  Clock,
-  Star,
-  AlertCircle,
   Trash2,
-  Cloud,
   Plus,
   FolderPlus,
   Upload,
   FolderUp,
-  ChevronRight,
-  ChevronDown,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 import { useFileStore } from "../../stores/fileStore";
@@ -35,7 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenUpload,
   onOpenNewFolder,
 }) => {
-  const { files } = useFileStore();
+  const { files, setCurrentFolderId } = useFileStore();
   const [showNewMenu, setShowNewMenu] = useState(false);
 
   const totalUsedBytes = files
@@ -50,32 +40,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
     id: ActiveTab,
     label: string,
     icon: React.ReactNode,
-    hasChevron: boolean = false
+    onClickExtra?: () => void
   ) => {
     const isActive = activeTab === id;
 
     return (
       <button
         key={id}
-        onClick={() => setActiveTab(id)}
-        className={`w-full flex items-center justify-between px-4 py-1.5 rounded-full text-sm font-medium transition cursor-pointer group ${
+        onClick={() => {
+          setActiveTab(id);
+          onClickExtra?.();
+        }}
+        className={`w-full flex items-center justify-between px-4 py-2 rounded-full text-sm font-medium transition cursor-pointer group ${
           isActive
             ? "bg-[#004a77] text-[#c2e7ff] font-semibold"
             : "text-[#c4c7c5] hover:bg-[#1f1f1f] hover:text-[#e3e3e3]"
         }`}
       >
         <div className="flex items-center gap-3 min-w-0">
-          {hasChevron ? (
-            <span className="w-3.5 -ml-1 text-[#9aa0a6]">
-              {isActive ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5" />
-              )}
-            </span>
-          ) : (
-            <span className="w-3.5 -ml-1" />
-          )}
           <span className="shrink-0">{icon}</span>
           <span className="truncate">{label}</span>
         </div>
@@ -143,31 +125,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        {/* Navigation Sections */}
-        <nav className="space-y-0.5">
-          {/* Section 1: Home & Projects */}
-          {renderNavItem("home", "Home", <Home className="w-4.5 h-4.5" />)}
-          {renderNavItem("projects", "Projects", <FolderKanban className="w-4.5 h-4.5" />)}
-
-          {/* Section 2: Drives */}
-          {renderNavItem("drive", "My Drive", <HardDrive className="w-4.5 h-4.5" />, true)}
-          {renderNavItem("computers", "Computers", <Laptop className="w-4.5 h-4.5" />, true)}
-
-          {/* Divider */}
-          <div className="my-2 border-t border-white/[0.08] mx-2" />
-
-          {/* Section 3: Shared & Activity */}
-          {renderNavItem("shared", "Shared with me", <Users className="w-4.5 h-4.5" />)}
-          {renderNavItem("recent", "Recent", <Clock className="w-4.5 h-4.5" />)}
-          {renderNavItem("starred", "Starred", <Star className="w-4.5 h-4.5" />)}
-
-          {/* Divider */}
-          <div className="my-2 border-t border-white/[0.08] mx-2" />
-
-          {/* Section 4: Maintenance */}
-          {renderNavItem("spam", "Spam", <AlertCircle className="w-4.5 h-4.5" />)}
+        {/* Navigation Sections: Home & Trash */}
+        <nav className="space-y-1">
+          {renderNavItem("home", "Home", <Home className="w-4.5 h-4.5" />, () => setCurrentFolderId(null))}
           {renderNavItem("trash", "Trash", <Trash2 className="w-4.5 h-4.5" />)}
-          {renderNavItem("storage", "Storage", <Cloud className="w-4.5 h-4.5" />)}
         </nav>
       </div>
 

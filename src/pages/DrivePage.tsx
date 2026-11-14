@@ -81,31 +81,11 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   let filteredFolders: DriveFolder[] = folders;
   let filteredFiles: DriveFile[] = files;
 
-  if (tab === "starred") {
-    filteredFolders = folders.filter((f) => f.isStarred && !f.isDeleted);
-    filteredFiles = files.filter((f) => f.isStarred && !f.isDeleted);
-  } else if (tab === "trash") {
+  if (tab === "trash") {
     filteredFolders = folders.filter((f) => f.isDeleted);
     filteredFiles = files.filter((f) => f.isDeleted);
-  } else if (tab === "recent") {
-    filteredFolders = [];
-    filteredFiles = [...files]
-      .filter((f) => !f.isDeleted)
-      .sort((a, b) => b.uploadedAt - a.uploadedAt)
-      .slice(0, 40);
-  } else if (tab === "home") {
-    filteredFolders = folders.filter((f) => !f.isDeleted).slice(0, 6);
-    filteredFiles = [...files]
-      .filter((f) => !f.isDeleted)
-      .sort((a, b) => b.uploadedAt - a.uploadedAt);
-  } else if (tab === "projects" || tab === "computers" || tab === "shared" || tab === "spam") {
-    filteredFolders = [];
-    filteredFiles = [];
-  } else if (tab === "storage") {
-    filteredFolders = [];
-    filteredFiles = files.filter((f) => !f.isDeleted).sort((a, b) => b.size - a.size);
   } else {
-    // Normal "drive" tab: filter by active folder & non-deleted
+    // Normal "home" tab: filter by active folder & non-deleted
     filteredFolders = folders.filter(
       (f) => f.parentId === currentFolderId && !f.isDeleted
     );
@@ -288,9 +268,9 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   };
 
   // Breadcrumbs calculation
-  const breadcrumbs: { id: string | null; name: string }[] = [{ id: null, name: "My Drive" }];
+  const breadcrumbs: { id: string | null; name: string }[] = [{ id: null, name: "Home" }];
   const currentFolder = folders.find((f) => f.id === currentFolderId);
-  if (currentFolderId && tab === "drive") {
+  if (currentFolderId && (tab === "drive" || tab === "home")) {
     let curr = currentFolder;
     const trail: { id: string; name: string }[] = [];
     while (curr) {
@@ -302,28 +282,12 @@ export const DrivePage: React.FC<DrivePageProps> = ({
 
   const getTabTitle = () => {
     switch (tab) {
-      case "home":
-        return "Home";
-      case "projects":
-        return "Projects";
-      case "drive":
-        return currentFolder ? currentFolder.name : "My Drive";
-      case "computers":
-        return "Computers";
-      case "shared":
-        return "Shared with me";
-      case "recent":
-        return "Recent";
-      case "starred":
-        return "Starred";
-      case "spam":
-        return "Spam";
       case "trash":
         return "Trash";
-      case "storage":
-        return "Storage";
+      case "home":
+      case "drive":
       default:
-        return "Drive";
+        return currentFolder ? currentFolder.name : "Home";
     }
   };
 

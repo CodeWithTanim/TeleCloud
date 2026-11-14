@@ -20,6 +20,7 @@ import {
   FolderPlus,
   FileUp,
   FolderUp,
+  RotateCcw,
 } from "lucide-react";
 import { useFileStore } from "../stores/fileStore";
 import { useAuthStore } from "../stores/authStore";
@@ -258,12 +259,41 @@ export const DrivePage: React.FC<DrivePageProps> = ({
 
   const handleDelete = (id: string, isFolder: boolean) => {
     if (!activeChannel.id) return;
-    deletePermanently(activeChannel.id, id, isFolder);
+    if (tab === "trash") {
+      deletePermanently(activeChannel.id, id, isFolder);
+    } else {
+      moveToTrash(activeChannel.id, id, isFolder);
+    }
+  };
+
+  const handleRestore = (id: string, isFolder: boolean) => {
+    if (!activeChannel.id) return;
+    restoreFromTrash(activeChannel.id, id, isFolder);
+  };
+
+  const handleEmptyTrash = async () => {
+    if (!activeChannel.id) return;
+    const trashedCount = filteredFiles.length + filteredFolders.length;
+    if (trashedCount === 0) return;
+    if (
+      confirm(
+        `Empty trash? All ${trashedCount} item(s) will be permanently deleted from Telegram and cannot be recovered.`
+      )
+    ) {
+      await emptyTrash(activeChannel.id);
+    }
   };
 
   const handleDeleteSelected = () => {
     if (!activeChannel.id || selectedIds.length === 0) return;
-    deleteMultiplePermanently(activeChannel.id, selectedIds);
+    if (tab === "trash") {
+      deleteMultiplePermanently(activeChannel.id, selectedIds);
+    } else {
+      for (const id of selectedIds) {
+        const isFolder = folders.some((f) => f.id === id);
+        moveToTrash(activeChannel.id, id, isFolder);
+      }
+    }
     setSelectedIds([]);
   };
 
@@ -718,16 +748,17 @@ export const DrivePage: React.FC<DrivePageProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Empty Trash Button (when on Trash tab and items exist) */}
-            {tab === "trash" && (filteredFiles.length > 0 || filteredFolders.length > 0) && (
+            {/* Empty Trash Button (always visible on Trash tab) */}
+            {tab === "trash" && (
               <button
-                onClick={() => {
-                  if (activeChannel.id && confirm("Permanently delete all items in trash from Telegram and TeleCloud?")) {
-                    emptyTrash(activeChannel.id);
-                  }
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 text-xs font-medium transition cursor-pointer"
-                title="Permanently delete all trash from Telegram"
+                onClick={handleEmptyTrash}
+                disabled={filteredFiles.length === 0 && filteredFolders.length === 0}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition ${
+                  filteredFiles.length > 0 || filteredFolders.length > 0
+                    ? "bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border-rose-500/30 cursor-pointer shadow-sm"
+                    : "opacity-40 text-[#9aa0a6] border-white/10 cursor-not-allowed"
+                }`}
+                title="Empty trash"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Empty trash</span>
@@ -973,6 +1004,28 @@ export const DrivePage: React.FC<DrivePageProps> = ({
         onMouseUp={handleMouseUp}
         className="flex-1 overflow-y-auto px-6 pb-6 relative select-none"
       >
+        {/* Trash Banner with Empty Trash option */}
+        {tab === "trash" && (
+          <div className="mb-4 px-4 py-3 rounded-xl bg-[#1e1f20] border border-white/10 flex items-center justify-between text-xs text-[#9aa0a6]">
+            <div className="flex items-center gap-2.5">
+              <Trash2 className="w-4 h-4 text-[#7CB8F8] shrink-0" />
+              <span>Items in trash are permanently deleted from Telegram when emptied.</span>
+            </div>
+            <button
+              onClick={handleEmptyTrash}
+              disabled={filteredFiles.length === 0 && filteredFolders.length === 0}
+              className={`px-3.5 py-1.5 rounded-full font-medium transition flex items-center gap-1.5 ${
+                filteredFiles.length > 0 || filteredFolders.length > 0
+                  ? "bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 cursor-pointer shadow-sm"
+                  : "opacity-40 text-neutral-500 border border-white/5 cursor-not-allowed"
+              }`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Empty trash</span>
+            </button>
+          </div>
+        )}
+
         {/* Marquee Drag Selection Box (matching user screenshot) */}
         {selectionBox && (selectionBox.width > 2 || selectionBox.height > 2) && (
           <div
@@ -988,7 +1041,19 @@ export const DrivePage: React.FC<DrivePageProps> = ({
 
         {isEmpty ? (
           <div className="h-full flex items-center justify-center min-h-[50vh]">
-            <DriveEmptyIllustration />
+            {tab === "trash" ? (
+              <div className="flex flex-col items-center justify-center select-none text-center">
+                <div className="w-20 h-20 rounded-full bg-[#1e1f20] border border-white/10 flex items-center justify-center text-[#9aa0a6] mb-3">
+                  <Trash2 className="w-10 h-10 stroke-1" />
+                </div>
+                <h2 className="text-xl font-medium text-[#E3E3E3] tracking-tight">Trash is empty</h2>
+                <p className="text-sm text-[#9AA0A6] mt-1.5 max-w-md font-normal">
+                  Items moved to trash will appear here
+                </p>
+              </div>
+            ) : (
+              <DriveEmptyIllustration />
+            )}
           </div>
         ) : viewMode === "grid" ? (
           <FileGrid
@@ -1001,6 +1066,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onToggleStar={handleToggleStar}
             onRename={handleRename}
             onDelete={handleDelete}
+            onRestore={handleRestore}
           />
         ) : (
           <FileList
@@ -1013,6 +1079,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onToggleStar={handleToggleStar}
             onRename={handleRename}
             onDelete={handleDelete}
+            onRestore={handleRestore}
           />
         )}
       </div>
@@ -1024,13 +1091,32 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             {selectedIds.length} {selectedIds.length === 1 ? "item" : "items"} selected
           </span>
           <div className="w-px h-3.5 bg-white/10" />
+          {tab === "trash" && (
+            <>
+              <button
+                onClick={() => {
+                  for (const id of selectedIds) {
+                    const isFolder = folders.some((f) => f.id === id);
+                    handleRestore(id, isFolder);
+                  }
+                  setSelectedIds([]);
+                }}
+                className="flex items-center gap-1.5 text-[#7CB8F8] hover:text-[#c2e7ff] font-medium transition cursor-pointer"
+                title="Restore selected items"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Restore</span>
+              </button>
+              <div className="w-px h-3.5 bg-white/10" />
+            </>
+          )}
           <button
             onClick={handleDeleteSelected}
             className="flex items-center gap-1.5 text-rose-400 hover:text-rose-300 font-medium transition cursor-pointer"
-            title="Delete selected from Telegram and TeleCloud"
+            title={tab === "trash" ? "Permanently delete from Telegram" : "Move selected to trash"}
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Delete</span>
+            <span>{tab === "trash" ? "Delete forever" : "Delete"}</span>
           </button>
           <div className="w-px h-3.5 bg-white/10" />
           <button

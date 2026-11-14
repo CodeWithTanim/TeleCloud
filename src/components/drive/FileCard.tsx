@@ -13,6 +13,7 @@ import {
   Download,
   Trash2,
   Edit2,
+  RotateCcw,
 } from "lucide-react";
 import { DriveFile, DriveFolder } from "../../types";
 import { formatBytes, formatDate, getFileCategory } from "../../lib/utils/formatters";
@@ -28,6 +29,7 @@ interface FileCardProps {
   onToggleStar: (id: string, isFolder: boolean) => void;
   onRename: (id: string, name: string, isFolder: boolean) => void;
   onDelete: (id: string, isFolder: boolean) => void;
+  onRestore?: (id: string, isFolder: boolean) => void;
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
@@ -40,6 +42,7 @@ export const FileCard: React.FC<FileCardProps> = ({
   onToggleStar,
   onRename,
   onDelete,
+  onRestore,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -168,15 +171,40 @@ export const FileCard: React.FC<FileCardProps> = ({
                 >
                   <Edit2 className="w-3.5 h-3.5" /> Rename
                 </button>
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    onDelete(item.id, isFolder);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-rose-500/10 text-rose-400 text-left transition"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                </button>
+                {item.isDeleted ? (
+                  <>
+                    {onRestore && (
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
+                          onRestore(item.id, isFolder);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#7CB8F8]/10 text-[#7CB8F8] text-left transition cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> Restore
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        onDelete(item.id, isFolder);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-rose-500/10 text-rose-400 text-left transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete forever
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onDelete(item.id, isFolder);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-rose-500/10 text-rose-400 text-left transition cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Move to trash
+                  </button>
+                )}
               </div>
             </>
           )}

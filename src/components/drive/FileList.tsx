@@ -12,6 +12,7 @@ import {
   FileArchive,
   FileCode,
   FileText,
+  RotateCcw,
 } from "lucide-react";
 import { DriveFile, DriveFolder } from "../../types";
 import { formatBytes, formatDate, getFileCategory } from "../../lib/utils/formatters";
@@ -26,6 +27,7 @@ interface FileListProps {
   onToggleStar: (id: string, isFolder: boolean) => void;
   onRename: (id: string, name: string, isFolder: boolean) => void;
   onDelete: (id: string, isFolder: boolean) => void;
+  onRestore?: (id: string, isFolder: boolean) => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({
@@ -38,6 +40,7 @@ export const FileList: React.FC<FileListProps> = ({
   onToggleStar,
   onRename,
   onDelete,
+  onRestore,
 }) => {
   const getIcon = (item: DriveFile | DriveFolder, isFolder: boolean) => {
     if (isFolder) return <Folder className="w-5 h-5 text-[#9aa0a6] fill-[#9aa0a6]/20" />;
@@ -117,23 +120,46 @@ export const FileList: React.FC<FileListProps> = ({
               >
                 <Star className={`w-4 h-4 ${f.isStarred ? "fill-[#f4b400]" : ""}`} />
               </button>
-              <button
-                onClick={() => {
-                  const newName = prompt("Rename folder:", f.name);
-                  if (newName && newName.trim()) onRename(f.id, newName.trim(), true);
-                }}
-                className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100"
-                title="Rename"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => onDelete(f.id, true)}
-                className="p-1.5 text-[#9aa0a6] hover:text-rose-400 rounded-full transition opacity-0 group-hover:opacity-100"
-                title="Delete"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {f.isDeleted ? (
+                <>
+                  {onRestore && (
+                    <button
+                      onClick={() => onRestore(f.id, true)}
+                      className="p-1.5 text-[#7CB8F8] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                      title="Restore"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onDelete(f.id, true)}
+                    className="p-1.5 text-[#9aa0a6] hover:text-rose-400 rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                    title="Delete forever"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      const newName = prompt("Rename folder:", f.name);
+                      if (newName && newName.trim()) onRename(f.id, newName.trim(), true);
+                    }}
+                    className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                    title="Rename"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onDelete(f.id, true)}
+                    className="p-1.5 text-[#9aa0a6] hover:text-rose-400 rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                    title="Move to trash"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         );
@@ -186,23 +212,46 @@ export const FileList: React.FC<FileListProps> = ({
               >
                 <Download className="w-3.5 h-3.5" />
               </button>
-              <button
-                onClick={() => {
-                  const newName = prompt("Rename file:", file.name);
-                  if (newName && newName.trim()) onRename(file.id, newName.trim(), false);
-                }}
-                className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100"
-                title="Rename"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => onDelete(file.id, false)}
-                className="p-1.5 text-[#9aa0a6] hover:text-rose-400 rounded-full transition opacity-0 group-hover:opacity-100"
-                title="Delete"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {file.isDeleted ? (
+                <>
+                  {onRestore && (
+                    <button
+                      onClick={() => onRestore(file.id, false)}
+                      className="p-1.5 text-[#7CB8F8] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                      title="Restore"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onDelete(file.id, false)}
+                    className="p-1.5 text-[#9aa0a6] hover:text-rose-400 rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                    title="Delete forever"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      const newName = prompt("Rename file:", file.name);
+                      if (newName && newName.trim()) onRename(file.id, newName.trim(), false);
+                    }}
+                    className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                    title="Rename"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onDelete(file.id, false)}
+                    className="p-1.5 text-[#9aa0a6] hover:text-rose-400 rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                    title="Move to trash"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         );

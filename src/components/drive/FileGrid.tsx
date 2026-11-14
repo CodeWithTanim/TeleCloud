@@ -12,6 +12,7 @@ interface FileGridProps {
   onToggleStar: (id: string, isFolder: boolean) => void;
   onRename: (id: string, name: string, isFolder: boolean) => void;
   onDelete: (id: string, isFolder: boolean) => void;
+  onRestore?: (id: string, isFolder: boolean) => void;
 }
 
 export const FileGrid: React.FC<FileGridProps> = ({
@@ -24,6 +25,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
   onToggleStar,
   onRename,
   onDelete,
+  onRestore,
 }) => {
   return (
     <div className="space-y-6 pt-1">
@@ -44,6 +46,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 onToggleStar={onToggleStar}
                 onRename={onRename}
                 onDelete={onDelete}
+                onRestore={onRestore}
               />
             ))}
           </div>
@@ -68,6 +71,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 onToggleStar={onToggleStar}
                 onRename={onRename}
                 onDelete={onDelete}
+                onRestore={onRestore}
               />
             ))}
           </div>

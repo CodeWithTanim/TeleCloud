@@ -9,6 +9,7 @@ interface FileGridProps {
   onOpenFolder: (folderId: string) => void;
   onPreview: (file: DriveFile) => void;
   onDownload: (file: DriveFile) => void;
+  onDownloadFolder?: (folder: DriveFolder) => void;
   onToggleStar: (id: string, isFolder: boolean) => void;
   onRename: (id: string, name: string, isFolder: boolean) => void;
   onDelete: (id: string, isFolder: boolean) => void;
@@ -23,6 +24,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
   onOpenFolder,
   onPreview,
   onDownload,
+  onDownloadFolder,
   onToggleStar,
   onRename,
   onDelete,
@@ -45,6 +47,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 isFolder={true}
                 isSelected={selectedIds.includes(folder.id)}
                 onOpenFolder={onOpenFolder}
+                onDownloadFolder={onDownloadFolder}
                 onToggleStar={onToggleStar}
                 onRename={onRename}
                 onDelete={onDelete}

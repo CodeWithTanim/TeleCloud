@@ -1,4 +1,108 @@
+import { zipSync } from "fflate";
 import { getClient } from "./client";
+import { DriveFile, DriveFolder } from "../../types";
+
+export interface FolderZipEntry {
+  path: string;
+  file: DriveFile;
+}
+
+export function collectFolderZipEntries(
+  folderId: string,
+  allFolders: DriveFolder[],
+  allFiles: DriveFile[],
+  basePath: string = ""
+): FolderZipEntry[] {
+  const entries: FolderZipEntry[] = [];
+
+  // 1. Files in this folder
+  const currentFiles = allFiles.filter(
+    (f) => !f.isDeleted && f.folderId === folderId
+  );
+  for (const f of currentFiles) {
+    entries.push({
+      path: basePath ? `${basePath}/${f.name}` : f.name,
+      file: f,
+    });
+  }
+
+  // 2. Subfolders in this folder
+  const subfolders = allFolders.filter(
+    (sf) => !sf.isDeleted && sf.parentId === folderId
+  );
+  for (const sf of subfolders) {
+    const nextPath = basePath ? `${basePath}/${sf.name}` : sf.name;
+    entries.push(...collectFolderZipEntries(sf.id, allFolders, allFiles, nextPath));
+  }
+
+  return entries;
+}
+
+/**
+ * Downloads all files inside a folder (and its nested subfolders) from Telegram,
+ * zips them using fflate, and triggers direct browser download of `<folder_name>.zip`.
+ */
+export async function downloadFolderAsZip(
+  channelId: string,
+  folder: DriveFolder,
+  allFolders: DriveFolder[],
+  allFiles: DriveFile[],
+  onProgress?: (percentage: number, statusText?: string) => void
+): Promise<void> {
+  const entries = collectFolderZipEntries(folder.id, allFolders, allFiles);
+  const zipData: Record<string, Uint8Array> = {};
+
+  if (entries.length === 0) {
+    // Empty folder: create an empty zip with a small placeholder so it is a valid zip archive
+    zipData[".empty"] = new Uint8Array();
+  } else {
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const startPct = Math.round((i / entries.length) * 85);
+      onProgress?.(startPct, `Downloading ${entry.file.name}...`);
+
+      const blob = await downloadFileFromChannel(
+        channelId,
+        entry.file.messageId,
+        entry.file.name,
+        (filePct) => {
+          const overall = startPct + Math.round((filePct / 100) * (85 / entries.length));
+          onProgress?.(Math.min(85, overall), `Downloading ${entry.file.name}...`);
+        }
+      );
+
+      const arrayBuf = await blob.arrayBuffer();
+      let targetPath = entry.path;
+      let counter = 1;
+      while (zipData[targetPath]) {
+        const dotIndex = entry.path.lastIndexOf(".");
+        if (dotIndex !== -1) {
+          targetPath = `${entry.path.substring(0, dotIndex)} (${counter})${entry.path.substring(dotIndex)}`;
+        } else {
+          targetPath = `${entry.path} (${counter})`;
+        }
+        counter++;
+      }
+      zipData[targetPath] = new Uint8Array(arrayBuf);
+    }
+  }
+
+  onProgress?.(90, "Compressing ZIP archive...");
+  const zipped = zipSync(zipData, { level: 6 });
+  const zipBlob = new Blob([zipped], { type: "application/zip" });
+  const url = URL.createObjectURL(zipBlob);
+
+  const safeName = (folder.name || "archive").replace(/[/\\?%*:|"<>]/g, "_");
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${safeName}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+  onProgress?.(100, "Done");
+}
 
 export async function downloadFileFromChannel(
   channelId: string,

@@ -28,6 +28,7 @@ interface FileCardProps {
   onOpenFolder?: (folderId: string) => void;
   onPreview?: (file: DriveFile) => void;
   onDownload?: (file: DriveFile) => void;
+  onDownloadFolder?: (folder: DriveFolder) => void;
   onToggleStar: (id: string, isFolder: boolean) => void;
   onRename: (id: string, name: string, isFolder: boolean) => void;
   onDelete: (id: string, isFolder: boolean) => void;
@@ -42,6 +43,7 @@ export const FileCard: React.FC<FileCardProps> = ({
   onOpenFolder,
   onPreview,
   onDownload,
+  onDownloadFolder,
   onToggleStar,
   onRename,
   onDelete,
@@ -119,7 +121,9 @@ export const FileCard: React.FC<FileCardProps> = ({
         e.stopPropagation();
         setShowMenu(true);
       }}
-      className={`group relative rounded-2xl p-3 transition duration-200 cursor-pointer flex flex-col justify-between overflow-hidden ${
+      className={`group relative rounded-2xl p-3 transition duration-200 cursor-pointer flex flex-col justify-between ${
+        showMenu ? "z-50 overflow-visible" : isFolder ? "overflow-visible" : "overflow-hidden"
+      } ${
         isSelected
           ? "bg-[#004a77]/35 border border-[#7CB8F8]/60 ring-2 ring-[#7CB8F8]/40 shadow-lg shadow-black/40"
           : "bg-[#1e1f20] hover:bg-[#282a2c] border border-white/[0.04] hover:border-white/[0.12] hover:shadow-lg"
@@ -165,25 +169,56 @@ export const FileCard: React.FC<FileCardProps> = ({
                 className="fixed inset-0 z-30"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-8 z-40 w-44 bg-[#1e1f20] border border-white/10 rounded-xl shadow-2xl py-1 text-xs text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100">
-                {file && onDownload && (
+              <div className="absolute right-0 top-8 z-50 w-44 bg-[#1e1f20] border border-white/10 rounded-xl shadow-2xl py-1 text-xs text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100">
+                {/* Download option (Folder = Zip download, File = direct download) */}
+                {isFolder && folder && onDownloadFolder && !item.isDeleted && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onDownloadFolder(folder);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition cursor-pointer group"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#9aa0a6] group-hover:text-white" />
+                    <span>Download</span>
+                  </button>
+                )}
+                {!isFolder && file && onDownload && (
                   <button
                     onClick={() => {
                       setShowMenu(false);
                       onDownload(file);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left transition"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition cursor-pointer group"
                   >
-                    <Download className="w-3.5 h-3.5" /> Download
+                    <Download className="w-3.5 h-3.5 text-[#9aa0a6] group-hover:text-white" />
+                    <span>Download</span>
                   </button>
                 )}
+
+                {/* Rename option */}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    const newName = prompt(isFolder ? "Rename folder:" : "Rename file:", item.name);
+                    if (newName && newName.trim()) {
+                      onRename(item.id, newName.trim(), isFolder);
+                    }
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition cursor-pointer group"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-[#9aa0a6] group-hover:text-white" />
+                  <span>Rename</span>
+                </button>
+
+                {/* Pin to sidebar option for folders */}
                 {isFolder && onTogglePin && !item.isDeleted && (
                   <button
                     onClick={() => {
                       setShowMenu(false);
                       onTogglePin(item.id);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left transition cursor-pointer"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition cursor-pointer group"
                   >
                     {(item as DriveFolder).isPinned ? (
                       <>
@@ -192,24 +227,17 @@ export const FileCard: React.FC<FileCardProps> = ({
                       </>
                     ) : (
                       <>
-                        <Pin className="w-3.5 h-3.5 text-[#9aa0a6]" />
+                        <Pin className="w-3.5 h-3.5 text-[#9aa0a6] group-hover:text-white" />
                         <span>Pin to sidebar</span>
                       </>
                     )}
                   </button>
                 )}
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    const newName = prompt("Rename item:", item.name);
-                    if (newName && newName.trim()) {
-                      onRename(item.id, newName.trim(), isFolder);
-                    }
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/5 text-left transition"
-                >
-                  <Edit2 className="w-3.5 h-3.5" /> Rename
-                </button>
+
+                {/* Divider */}
+                <div className="my-1 border-t border-white/10" />
+
+                {/* Move to trash / Delete forever */}
                 {item.isDeleted ? (
                   <>
                     {onRestore && (
@@ -218,9 +246,10 @@ export const FileCard: React.FC<FileCardProps> = ({
                           setShowMenu(false);
                           onRestore(item.id, isFolder);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#7CB8F8]/10 text-[#7CB8F8] text-left transition cursor-pointer"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#7CB8F8]/10 text-[#7CB8F8] text-left transition cursor-pointer"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" /> Restore
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Restore</span>
                       </button>
                     )}
                     <button
@@ -228,9 +257,10 @@ export const FileCard: React.FC<FileCardProps> = ({
                         setShowMenu(false);
                         onDelete(item.id, isFolder);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-rose-500/10 text-rose-400 text-left transition cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-rose-500/10 text-rose-400 text-left transition cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" /> Delete forever
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete forever</span>
                     </button>
                   </>
                 ) : (
@@ -239,9 +269,10 @@ export const FileCard: React.FC<FileCardProps> = ({
                       setShowMenu(false);
                       onDelete(item.id, isFolder);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-rose-500/10 text-rose-400 text-left transition cursor-pointer"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-rose-500/10 text-rose-400 text-left transition cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> Move to trash
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Move to trash</span>
                   </button>
                 )}
               </div>

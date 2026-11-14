@@ -23,6 +23,7 @@ import {
   RotateCcw,
   Pin,
   PinOff,
+  Download,
 } from "lucide-react";
 import { useFileStore } from "../stores/fileStore";
 import { useAuthStore } from "../stores/authStore";
@@ -31,7 +32,7 @@ import { FileGrid } from "../components/drive/FileGrid";
 import { FileList } from "../components/drive/FileList";
 import { FilePreviewModal } from "../components/drive/FilePreviewModal";
 import { DriveEmptyIllustration } from "../components/drive/DriveEmptyIllustration";
-import { triggerFileDownload } from "../lib/telegram/downloader";
+import { triggerFileDownload, downloadFolderAsZip } from "../lib/telegram/downloader";
 import { uploadFileToChannel } from "../lib/telegram/uploader";
 import { getFileCategory } from "../lib/utils/formatters";
 import { DriveFile, DriveFolder, ActiveTab } from "../types";
@@ -247,6 +248,34 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   const handleDownload = (file: DriveFile) => {
     if (!activeChannel.id) return;
     triggerFileDownload(activeChannel.id, file.messageId, file.name);
+  };
+
+  const handleDownloadFolder = async (folder: DriveFolder) => {
+    if (!activeChannel.id) return;
+    const transferId = `dl_zip_${folder.id}_${Date.now()}`;
+    addTransfer({
+      id: transferId,
+      name: `${folder.name}.zip`,
+      size: 0,
+      transferred: 0,
+      type: "download",
+    });
+
+    try {
+      await downloadFolderAsZip(
+        activeChannel.id,
+        folder,
+        folders,
+        files,
+        (pct) => {
+          updateProgress(transferId, pct, 0);
+        }
+      );
+      setStatus(transferId, "completed");
+    } catch (err: any) {
+      console.error("[DownloadFolder] Failed to download folder zip:", err);
+      setStatus(transferId, "error", err.message || "Failed to download folder");
+    }
   };
 
   const handleToggleStar = (id: string, isFolder: boolean) => {
@@ -1088,6 +1117,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onOpenFolder={handleOpenFolder}
             onPreview={(f: DriveFile) => setPreviewFile(f)}
             onDownload={handleDownload}
+            onDownloadFolder={handleDownloadFolder}
             onToggleStar={handleToggleStar}
             onRename={handleRename}
             onDelete={handleDelete}
@@ -1102,6 +1132,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onOpenFolder={handleOpenFolder}
             onPreview={(f: DriveFile) => setPreviewFile(f)}
             onDownload={handleDownload}
+            onDownloadFolder={handleDownloadFolder}
             onToggleStar={handleToggleStar}
             onRename={handleRename}
             onDelete={handleDelete}
@@ -1143,23 +1174,34 @@ export const DrivePage: React.FC<DrivePageProps> = ({
                 const f = folders.find((item) => item.id === selectedIds[0]);
                 if (!f) return null;
                 return (
-                  <button
-                    onClick={() => handleTogglePin(f.id)}
-                    className="flex items-center gap-1.5 text-[#7CB8F8] hover:text-[#c2e7ff] font-medium transition cursor-pointer"
-                    title={f.isPinned ? "Unpin folder from sidebar" : "Pin folder to sidebar"}
-                  >
-                    {f.isPinned ? (
-                      <>
-                        <PinOff className="w-3.5 h-3.5" />
-                        <span>Unpin</span>
-                      </>
-                    ) : (
-                      <>
-                        <Pin className="w-3.5 h-3.5" />
-                        <span>Pin to sidebar</span>
-                      </>
-                    )}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handleDownloadFolder(f)}
+                      className="flex items-center gap-1.5 text-[#7CB8F8] hover:text-[#c2e7ff] font-medium transition cursor-pointer"
+                      title="Download folder as ZIP archive"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download .zip</span>
+                    </button>
+                    <div className="w-px h-3.5 bg-white/10" />
+                    <button
+                      onClick={() => handleTogglePin(f.id)}
+                      className="flex items-center gap-1.5 text-[#7CB8F8] hover:text-[#c2e7ff] font-medium transition cursor-pointer"
+                      title={f.isPinned ? "Unpin folder from sidebar" : "Pin folder to sidebar"}
+                    >
+                      {f.isPinned ? (
+                        <>
+                          <PinOff className="w-3.5 h-3.5" />
+                          <span>Unpin</span>
+                        </>
+                      ) : (
+                        <>
+                          <Pin className="w-3.5 h-3.5" />
+                          <span>Pin to sidebar</span>
+                        </>
+                      )}
+                    </button>
+                  </>
                 );
               })()}
               <div className="w-px h-3.5 bg-white/10" />

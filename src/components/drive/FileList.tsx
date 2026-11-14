@@ -26,6 +26,7 @@ interface FileListProps {
   onOpenFolder: (folderId: string) => void;
   onPreview: (file: DriveFile) => void;
   onDownload: (file: DriveFile) => void;
+  onDownloadFolder?: (folder: DriveFolder) => void;
   onToggleStar: (id: string, isFolder: boolean) => void;
   onRename: (id: string, name: string, isFolder: boolean) => void;
   onDelete: (id: string, isFolder: boolean) => void;
@@ -40,6 +41,7 @@ export const FileList: React.FC<FileListProps> = ({
   onOpenFolder,
   onPreview,
   onDownload,
+  onDownloadFolder,
   onToggleStar,
   onRename,
   onDelete,
@@ -145,6 +147,15 @@ export const FileList: React.FC<FileListProps> = ({
                 </>
               ) : (
                 <>
+                  {onDownloadFolder && (
+                    <button
+                      onClick={() => onDownloadFolder(f)}
+                      className="p-1.5 text-[#9aa0a6] hover:text-white rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                      title="Download folder as ZIP"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   {onTogglePin && (
                     <button
                       onClick={() => onTogglePin(f.id)}

@@ -83,6 +83,12 @@ export const App: React.FC = () => {
         onRefresh={() => activeChannel.id && loadIndex(activeChannel.id)}
         onOpenSettings={() => setActiveTab("settings")}
         onToggleMobileSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
+        onNavigateHome={() => {
+          setActiveTab("home");
+          setCurrentFolderId(null);
+          useFileStore.getState().setSearchQuery("");
+          setIsMobileSidebarOpen(false);
+        }}
       />
 
       {/* Main Workspace: Sidebar on left, workspace container on right */}

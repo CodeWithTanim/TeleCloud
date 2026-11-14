@@ -8,12 +8,14 @@ interface HeaderProps {
   onRefresh: () => void;
   onOpenSettings: () => void;
   onToggleMobileSidebar?: () => void;
+  onNavigateHome?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onRefresh,
   onOpenSettings,
   onToggleMobileSidebar,
+  onNavigateHome,
 }) => {
   const { searchQuery, setSearchQuery, isSaving, isLoading } = useFileStore();
   const { user, activeChannel } = useAuthStore();
@@ -35,11 +37,16 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         )}
 
-        {/* Brand Logo (Always shows icon, text responsive) */}
-        <div className="flex items-center">
-          <TeleCloudLogo size="sm" showText={true} className="hidden sm:flex" />
-          <TeleCloudLogo size="sm" showText={false} className="flex sm:hidden" />
-        </div>
+        {/* Brand Logo (Always shows icon, text responsive, clickable to navigate Home) */}
+        <button
+          onClick={onNavigateHome}
+          className="flex items-center cursor-pointer transition hover:opacity-90 active:scale-95 group focus:outline-none"
+          title="TeleCloud - Go to Home"
+          aria-label="TeleCloud Home"
+        >
+          <TeleCloudLogo size="sm" showText={true} className="hidden sm:flex pointer-events-none" />
+          <TeleCloudLogo size="sm" showText={false} className="flex sm:hidden pointer-events-none" />
+        </button>
       </div>
 
       {/* Middle: Google Drive Search Bar */}

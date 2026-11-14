@@ -273,7 +273,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div>
           {/* Drawer Top Header with Logo and Close button */}
           <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/[0.08]">
-            <TeleCloudLogo size="sm" showText={true} />
+            <button
+              onClick={() => {
+                setActiveTab("home");
+                setCurrentFolderId(null);
+                useFileStore.getState().setSearchQuery("");
+                onCloseMobile?.();
+              }}
+              className="flex items-center cursor-pointer hover:opacity-90 active:scale-95 transition focus:outline-none"
+              title="Go to Home"
+            >
+              <TeleCloudLogo size="sm" showText={true} className="pointer-events-none" />
+            </button>
             <button
               onClick={onCloseMobile}
               className="p-1.5 rounded-full text-[#9aa0a6] hover:text-white hover:bg-white/10 transition cursor-pointer"

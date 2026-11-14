@@ -4,12 +4,14 @@ interface TeleCloudLogoProps {
   size?: "sm" | "md" | "lg";
   showText?: boolean;
   className?: string;
+  onClick?: () => void;
 }
 
 export const TeleCloudLogo: React.FC<TeleCloudLogoProps> = ({
   size = "md",
   showText = true,
   className = "",
+  onClick,
 }) => {
   const iconSizes = {
     sm: "w-7 h-7",
@@ -24,7 +26,10 @@ export const TeleCloudLogo: React.FC<TeleCloudLogoProps> = ({
   };
 
   return (
-    <div className={`flex items-center gap-2.5 select-none cursor-pointer ${className}`}>
+    <div
+      onClick={onClick}
+      className={`flex items-center gap-2.5 select-none cursor-pointer group ${className}`}
+    >
       {/* Official Telegram Logo SVG */}
       <svg
         className={`${iconSizes[size]} shrink-0 transition-transform hover:scale-105`}

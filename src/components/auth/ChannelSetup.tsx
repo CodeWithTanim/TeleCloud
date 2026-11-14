@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
   FolderPlus,
-  Radio,
-  PlusCircle,
-  Hash,
-  CheckCircle2,
-  AlertCircle,
   RefreshCw,
   FolderLock,
-  Layers,
   ArrowRight,
+  Hash,
+  AlertCircle,
+  Check,
 } from "lucide-react";
-import { Button } from "../common/Button";
+import { BrandLogo } from "../common/BrandLogo";
 import { useAuthStore } from "../../stores/authStore";
 import { StorageChannelInfo } from "../../types";
 import {
@@ -108,52 +105,48 @@ export const ChannelSetup: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40">
-      <div className="w-full max-w-2xl bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl">
-        <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <FolderLock className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">Select Storage Channel</h1>
-              <p className="text-sm text-slate-400">
-                Logged in as <span className="text-indigo-400 font-medium">{user?.firstName || "User"}</span>
-              </p>
-            </div>
+    <div className="min-h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0a0b0d] text-[#e3e3e3] select-none font-sans">
+      {/* Brand Header */}
+      <div className="mb-6 flex flex-col items-center">
+        <BrandLogo size="md" showText={true} />
+      </div>
+
+      {/* Main Card */}
+      <div className="w-full max-w-[460px] bg-[#141517] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_16px_44px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-300">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              Storage Destination
+            </h1>
+            <p className="text-xs text-neutral-400 mt-0.5">
+              Choose where your drive files are stored
+            </p>
           </div>
           <button
             onClick={loadChannels}
             disabled={isLoading}
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
+            className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-[#1E1F22] transition"
             title="Refresh channels"
           >
-            <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
         </div>
 
-        {/* Informational banner highlighting user control */}
-        <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 mb-6 text-sm text-slate-300">
-          <p className="leading-relaxed">
-            <strong className="text-white">Manual Channel Configuration:</strong> TeleCloud gives you 100% control over where your files are stored. No channels are automatically generated behind your back. Choose an existing channel, point to a specific channel ID, or manually create a fresh one below.
-          </p>
-        </div>
-
-        {/* Tab navigation */}
-        <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-950 rounded-2xl border border-slate-800 mb-6">
+        {/* Pill Segmented Tabs */}
+        <div className="flex bg-[#1E1F22] p-1 rounded-full mb-5">
           <button
             type="button"
             onClick={() => {
               setMode("select");
               setError(null);
             }}
-            className={`py-2 px-3 text-xs font-semibold rounded-xl transition ${
+            className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-all text-center cursor-pointer ${
               mode === "select"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                : "text-slate-400 hover:text-white"
+                ? "bg-[#2C2D30] text-white shadow-xs font-semibold"
+                : "text-neutral-400 hover:text-white"
             }`}
           >
-            Choose Existing
+            Existing
           </button>
           <button
             type="button"
@@ -161,13 +154,13 @@ export const ChannelSetup: React.FC = () => {
               setMode("custom");
               setError(null);
             }}
-            className={`py-2 px-3 text-xs font-semibold rounded-xl transition ${
+            className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-all text-center cursor-pointer ${
               mode === "custom"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                : "text-slate-400 hover:text-white"
+                ? "bg-[#2C2D30] text-white shadow-xs font-semibold"
+                : "text-neutral-400 hover:text-white"
             }`}
           >
-            Channel ID / Username
+            Channel ID
           </button>
           <button
             type="button"
@@ -175,174 +168,189 @@ export const ChannelSetup: React.FC = () => {
               setMode("create");
               setError(null);
             }}
-            className={`py-2 px-3 text-xs font-semibold rounded-xl transition ${
+            className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-all text-center cursor-pointer ${
               mode === "create"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                : "text-slate-400 hover:text-white"
+                ? "bg-[#2C2D30] text-white shadow-xs font-semibold"
+                : "text-neutral-400 hover:text-white"
             }`}
           >
-            Create New Channel
+            Create New
           </button>
         </div>
 
         {error && (
-          <div className="p-3 mb-6 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs leading-relaxed animate-in fade-in duration-150">
+            {error}
           </div>
         )}
 
-        {/* Mode 1: Select from existing channels */}
+        {/* MODE 1: Select Existing Channel */}
         {mode === "select" && (
           <div className="space-y-4">
             {isLoading ? (
-              <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
-                <RefreshCw className="w-6 h-6 animate-spin text-indigo-500" />
-                <p className="text-sm">Scanning your Telegram channels...</p>
+              <div className="py-12 flex flex-col items-center justify-center text-neutral-400 gap-2">
+                <RefreshCw className="w-5 h-5 animate-spin text-[#A8C7FA]" />
+                <p className="text-xs">Scanning Telegram channels...</p>
               </div>
             ) : channels.length === 0 ? (
-              <div className="py-8 text-center text-slate-400">
-                <p className="text-sm mb-3">No suitable channels found where you have admin permissions.</p>
-                <Button size="sm" variant="secondary" onClick={() => setMode("create")}>
-                  Create a new storage channel
-                </Button>
+              <div className="py-8 text-center text-neutral-400 space-y-3">
+                <p className="text-xs">No channels found where you are an admin.</p>
+                <button
+                  type="button"
+                  onClick={() => setMode("create")}
+                  className="px-4 py-2 text-xs rounded-full bg-[#2C2D30] hover:bg-[#383a3e] text-white"
+                >
+                  Create new storage channel
+                </button>
               </div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {channels.map((ch) => (
-                  <label
-                    key={ch.id}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition ${
-                      selectedChannelId === ch.id
-                        ? "bg-indigo-950/40 border-indigo-500 text-white ring-1 ring-indigo-500"
-                        : "bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          selectedChannelId === ch.id
-                            ? "border-indigo-500 bg-indigo-500"
-                            : "border-slate-600"
-                        }`}
-                      >
-                        {selectedChannelId === ch.id && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold">{ch.title}</div>
-                        <div className="text-xs text-slate-500 font-mono">
-                          {ch.username ? `@${ch.username}` : ch.id}
-                          {ch.isCreator && " • Creator"}
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {channels.map((ch) => {
+                  const isSelected = selectedChannelId === ch.id;
+                  return (
+                    <div
+                      key={ch.id}
+                      onClick={() => setSelectedChannelId(ch.id)}
+                      className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition ${
+                        isSelected
+                          ? "bg-[#1f2633] border-[#70a7ff] text-white ring-1 ring-[#70a7ff]/50"
+                          : "bg-[#18191B] border-white/[0.08] hover:border-white/[0.18] text-neutral-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 pr-2">
+                        <div
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                            isSelected
+                              ? "border-[#70a7ff] bg-[#70a7ff]"
+                              : "border-neutral-500"
+                          }`}
+                        >
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-semibold truncate">{ch.title}</h4>
+                          <p className="text-[11px] text-neutral-400 font-mono truncate">
+                            {ch.username ? `@${ch.username}` : ch.id}
+                            {ch.isCreator && " • Owner"}
+                          </p>
                         </div>
                       </div>
+                      {ch.membersCount && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-neutral-400 shrink-0">
+                          {ch.membersCount}
+                        </span>
+                      )}
                     </div>
-                    {ch.membersCount && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
-                        {ch.membersCount} members
-                      </span>
-                    )}
-                    <input
-                      type="radio"
-                      name="storage_channel"
-                      value={ch.id}
-                      checked={selectedChannelId === ch.id}
-                      onChange={() => setSelectedChannelId(ch.id)}
-                      className="sr-only"
-                    />
-                  </label>
-                ))}
+                  );
+                })}
               </div>
             )}
 
-            <div className="pt-4">
-              <Button
-                variant="primary"
-                onClick={handleSelectExisting}
-                disabled={!selectedChannelId || isLoading}
-                className="w-full py-3 text-base"
-              >
-                Use Selected Channel <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
+            <button
+              type="button"
+              onClick={handleSelectExisting}
+              disabled={!selectedChannelId || isLoading}
+              className="w-full h-11 rounded-full bg-[#526a94] hover:bg-[#5f7cae] active:bg-[#455a7e] text-white font-medium text-sm transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 mt-5"
+            >
+              <span>Connect Selected Channel</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
-        {/* Mode 2: Custom Channel ID / Username */}
+        {/* MODE 2: Custom Channel ID / Username */}
         {mode === "custom" && (
           <form onSubmit={handleCustomSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              <label className="block text-xs font-medium text-[#A8C7FA] mb-1.5">
                 Channel ID or @username
               </label>
-              <div className="relative">
-                <Hash className="w-5 h-5 absolute left-3.5 top-3.5 text-slate-500" />
-                <input
-                  type="text"
-                  placeholder="e.g. -1001234567890 or @my_storage_channel"
-                  value={customInput}
-                  onChange={(e) => setCustomInput(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm font-mono transition"
-                  autoFocus
-                />
-              </div>
-              <p className="text-xs text-slate-500 mt-2">
-                Make sure your account is an Administrator or Owner of this channel with permission to post messages.
+              <input
+                type="text"
+                placeholder="e.g. -1001234567890 or @my_storage"
+                value={customInput}
+                onChange={(e) => {
+                  setCustomInput(e.target.value);
+                  setError(null);
+                }}
+                className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 text-white placeholder-neutral-500 font-mono text-sm transition outline-none"
+                autoFocus
+              />
+              <p className="text-[11px] text-neutral-400 mt-2">
+                Make sure your account is an Administrator or Owner with posting rights.
               </p>
             </div>
 
-            <Button
+            <button
               type="submit"
-              variant="primary"
-              isLoading={isSubmitting}
-              className="w-full py-3 text-base"
+              disabled={isSubmitting || !customInput.trim()}
+              className="w-full h-11 rounded-full bg-[#526a94] hover:bg-[#5f7cae] text-white font-medium text-sm transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-5"
             >
-              Verify & Connect Channel
-            </Button>
+              {isSubmitting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Verifying...</span>
+                </>
+              ) : (
+                <span>Verify & Connect</span>
+              )}
+            </button>
           </form>
         )}
 
-        {/* Mode 3: Explicit Channel Creation */}
+        {/* MODE 3: Create New Channel */}
         {mode === "create" && (
           <form onSubmit={handleCreateNew} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                Channel Name
+              <label className="block text-xs font-medium text-[#A8C7FA] mb-1.5">
+                Channel Title
               </label>
               <input
                 type="text"
                 placeholder="e.g. My Personal Cloud"
                 value={newChannelTitle}
                 onChange={(e) => setNewChannelTitle(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm font-medium transition"
+                className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 text-white placeholder-neutral-500 text-sm transition outline-none"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              <label className="block text-xs font-medium text-[#A8C7FA] mb-1.5">
                 Channel Description (Optional)
               </label>
               <input
                 type="text"
-                placeholder="Encrypted personal drive storage"
+                placeholder="Personal drive cloud storage"
                 value={newChannelAbout}
                 onChange={(e) => setNewChannelAbout(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm transition"
+                className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 text-white placeholder-neutral-500 text-sm transition outline-none"
               />
             </div>
 
-            <Button
+            <button
               type="submit"
-              variant="primary"
-              isLoading={isSubmitting}
-              className="w-full py-3 text-base"
+              disabled={isSubmitting || !newChannelTitle.trim()}
+              className="w-full h-11 rounded-full bg-[#526a94] hover:bg-[#5f7cae] text-white font-medium text-sm transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-5"
             >
-              Create & Set As Storage Channel
-            </Button>
+              {isSubmitting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                <span>Create & Connect</span>
+              )}
+            </button>
           </form>
         )}
+      </div>
+
+      {/* Pagination pill indicator dots */}
+      <div className="flex items-center gap-1.5 mt-5">
+        <div className="w-1.5 h-1 bg-white/20 rounded-full" />
+        <div className="w-1.5 h-1 bg-white/20 rounded-full" />
+        <div className="w-4.5 h-1 bg-[#A8C7FA] rounded-full transition-all duration-300" />
       </div>
     </div>
   );

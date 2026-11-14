@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { KeyRound, ShieldCheck, ExternalLink, ArrowRight, Lock } from "lucide-react";
-import { Button } from "../common/Button";
+import { KeyRound, ShieldCheck, ExternalLink, ArrowRight, Info } from "lucide-react";
+import { BrandLogo } from "../common/BrandLogo";
 import { useAuthStore } from "../../stores/authStore";
 
 export const ApiKeySetup: React.FC = () => {
@@ -28,85 +28,98 @@ export const ApiKeySetup: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40">
-      <div className="w-full max-w-xl bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-            <Lock className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Configure Your Telegram API</h1>
-            <p className="text-sm text-slate-400">Direct client connection • Zero middleman servers</p>
-          </div>
+    <div className="min-h-screen w-screen flex flex-col items-center justify-center p-4 bg-[#0a0b0d] text-[#e3e3e3] select-none font-sans">
+      {/* Brand Header */}
+      <div className="mb-6 flex flex-col items-center">
+        <BrandLogo size="md" showText={true} />
+      </div>
+
+      {/* Main Card */}
+      <div className="w-full max-w-[420px] bg-[#141517] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-[0_16px_44px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-300">
+        <div className="text-center space-y-1 mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            Developer Setup
+          </h1>
+          <p className="text-xs text-neutral-400">
+            Configure your personal Telegram API credentials
+          </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-900/50 mb-6 text-sm text-indigo-200">
-          <div className="flex items-start gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold text-white">Your Credentials Stay 100% On Your Device.</span>
-              <p className="text-xs text-indigo-300 mt-1 leading-relaxed">
-                Unlike third-party apps that bundle unknown developer keys, TeleCloud connects your browser directly to official Telegram data centers using your own developer credentials.
-              </p>
-            </div>
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs leading-relaxed animate-in fade-in duration-150">
+            {error}
           </div>
-        </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block text-xs font-medium text-[#A8C7FA] mb-1.5">
               Telegram API ID
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="e.g. 12345678"
-                value={apiId}
-                onChange={(e) => setApiId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono text-sm transition"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="e.g. 12345678"
+              value={apiId}
+              onChange={(e) => {
+                setApiId(e.target.value);
+                setError(null);
+              }}
+              className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] hover:border-white/[0.16] focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 text-white placeholder-neutral-500 font-mono text-sm transition outline-none"
+              autoFocus
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block text-xs font-medium text-[#A8C7FA] mb-1.5">
               Telegram API Hash
             </label>
-            <div className="relative">
-              <input
-                type="password"
-                placeholder="e.g. 0123456789abcdef0123456789abcdef"
-                value={apiHash}
-                onChange={(e) => setApiHash(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono text-sm transition"
-              />
-            </div>
+            <input
+              type="password"
+              placeholder="e.g. 457f14bd4e74ea235a9c72627..."
+              value={apiHash}
+              onChange={(e) => {
+                setApiHash(e.target.value);
+                setError(null);
+              }}
+              className="w-full h-11 px-3.5 rounded-xl bg-[#18191B] border border-white/[0.08] hover:border-white/[0.16] focus:border-[#A8C7FA] focus:ring-2 focus:ring-[#A8C7FA]/20 text-white placeholder-neutral-500 font-mono text-sm transition outline-none"
+            />
           </div>
 
-          {error && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
-              {error}
-            </div>
-          )}
-
-          <div className="pt-2">
-            <Button type="submit" variant="primary" className="w-full py-3 text-base">
-              Continue to Login <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+          <div className="flex items-start gap-1.5 px-1 mt-2 text-[11px] text-neutral-400 leading-tight">
+            <Info className="w-3.5 h-3.5 text-[#A8C7FA] shrink-0 mt-0.5" />
+            <span>
+              Your keys remain strictly on your local device. Direct client connection to Telegram data centers.
+            </span>
           </div>
+
+          <button
+            type="submit"
+            disabled={!apiId.trim() || !apiHash.trim()}
+            className="w-full h-11 rounded-full bg-[#526a94] hover:bg-[#5f7cae] active:bg-[#455a7e] text-white font-medium text-sm transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 mt-5"
+          >
+            <span>Continue</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-          <span>Need your free API credentials?</span>
+        <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-neutral-400">
+          <span>Need your free API keys?</span>
           <a
             href="https://my.telegram.org"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-medium transition"
+            className="flex items-center gap-1 text-[#A8C7FA] hover:underline font-medium transition"
           >
-            Get from my.telegram.org <ExternalLink className="w-3.5 h-3.5" />
+            my.telegram.org <ExternalLink className="w-3 h-3" />
           </a>
         </div>
+      </div>
+
+      {/* Pagination pill indicator dots */}
+      <div className="flex items-center gap-1.5 mt-5">
+        <div className="w-1.5 h-1 bg-white/20 rounded-full" />
+        <div className="w-4.5 h-1 bg-[#A8C7FA] rounded-full transition-all duration-300" />
+        <div className="w-1.5 h-1 bg-white/20 rounded-full" />
       </div>
     </div>
   );

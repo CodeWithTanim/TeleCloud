@@ -5,6 +5,7 @@ import { useFileStore } from "./stores/fileStore";
 import { ApiKeySetup } from "./components/auth/ApiKeySetup";
 import { TelegramLogin } from "./components/auth/TelegramLogin";
 import { ChannelSetup } from "./components/auth/ChannelSetup";
+import { BrandLogo } from "./components/common/BrandLogo";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { DrivePage } from "./pages/DrivePage";
@@ -38,12 +39,10 @@ export const App: React.FC = () => {
   // 1. Loading splash screen
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-slate-400">
-        <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-          <Shield className="w-8 h-8 animate-pulse" />
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <RefreshCw className="w-4 h-4 animate-spin text-indigo-500" />
+      <div className="min-h-screen w-screen bg-[#0a0b0d] flex flex-col items-center justify-center gap-4 text-neutral-400 select-none">
+        <BrandLogo size="lg" showText={true} />
+        <div className="flex items-center gap-2 text-xs text-neutral-500 mt-2">
+          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#A8C7FA]" />
           <span>Starting TeleCloud...</span>
         </div>
       </div>
@@ -67,7 +66,7 @@ export const App: React.FC = () => {
 
   // 5. Main Drive Workspace
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#0a0b0d] text-[#e3e3e3] font-sans">
       {/* Sidebar */}
       <Sidebar
         activeTab={activeTab}
@@ -77,7 +76,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-slate-950/40">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#0a0b0d]">
         <Header onRefresh={() => activeChannel.id && loadIndex(activeChannel.id)} />
 
         {activeTab === "settings" ? (

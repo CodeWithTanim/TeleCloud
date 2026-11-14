@@ -45,16 +45,20 @@ export const FileCard: React.FC<FileCardProps> = ({
   const folder = isFolder ? (item as DriveFolder) : null;
   const category = file ? getFileCategory(file.mimeType, file.name) : "folder";
 
-  const [thumbUrl, setThumbUrl] = useState<string | null>(file?.thumbnail || null);
+  const [thumbUrl, setThumbUrl] = useState<string | null>(
+    category === "image" ? file?.thumbnail || null : null
+  );
   const [isLoadingThumb, setIsLoadingThumb] = useState(false);
 
   useEffect(() => {
+    if (category !== "image") return;
+
     if (file?.thumbnail) {
       setThumbUrl(file.thumbnail);
       return;
     }
 
-    if (!isFolder && file && (category === "image" || category === "pdf") && !thumbUrl) {
+    if (!isFolder && file && !thumbUrl) {
       setIsLoadingThumb(true);
       getOrFetchThumbnail(file.channelId, file.messageId, file.mimeType)
         .then((url) => {
@@ -192,12 +196,13 @@ export const FileCard: React.FC<FileCardProps> = ({
       ) : (
         // File Layout
         <>
-          {category === "image" || (category === "pdf" && thumbUrl) ? (
+          {category === "image" ? (
             <div className="w-full h-36 rounded-xl bg-[#0a0b0d] border border-white/[0.06] mb-2.5 overflow-hidden relative flex items-center justify-center">
               {thumbUrl ? (
                 <img
                   src={thumbUrl}
                   alt={file?.name}
+                  onError={() => setThumbUrl(null)}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                 />
@@ -211,26 +216,24 @@ export const FileCard: React.FC<FileCardProps> = ({
               )}
             </div>
           ) : category === "pdf" ? (
-            // Dedicated PDF preview card
-            <div className="w-full h-36 rounded-xl bg-gradient-to-b from-rose-950/20 via-[#16171a] to-[#121315] border border-rose-500/25 mb-2.5 p-3 flex flex-col justify-between relative overflow-hidden group-hover:border-rose-500/40 transition">
-              <div className="flex items-center justify-between">
-                <span className="px-2 py-0.5 rounded-md bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold text-[10px] tracking-wider uppercase">
-                  PDF
-                </span>
-                <span className="text-[10px] text-neutral-400">Document</span>
-              </div>
-              <div className="flex items-center justify-center py-1">
-                <div className="w-14 h-16 bg-[#1f2025] border border-white/[0.08] rounded-lg shadow-md p-2 flex flex-col justify-between group-hover:scale-105 transition-transform">
-                  <div className="w-5 h-1 bg-rose-400/90 rounded-full" />
-                  <div className="space-y-1">
-                    <div className="w-full h-0.5 bg-neutral-600 rounded-full" />
-                    <div className="w-4/5 h-0.5 bg-neutral-600 rounded-full" />
-                    <div className="w-3/5 h-0.5 bg-neutral-600 rounded-full" />
-                  </div>
+            // Dedicated Google Drive PDF document card preview
+            <div className="w-full h-36 rounded-xl bg-[#0e0e0e] border border-rose-500/20 hover:border-rose-500/40 mb-2.5 p-2.5 flex items-center justify-center relative overflow-hidden transition group">
+              <div className="w-24 h-28 bg-[#1e1f20] border border-white/10 rounded-lg shadow-xl p-2.5 flex flex-col justify-between group-hover:scale-105 transition-transform duration-200">
+                <div className="flex items-center justify-between">
+                  <span className="px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-[9px] tracking-wider uppercase flex items-center gap-1">
+                    <FileText className="w-2.5 h-2.5" /> PDF
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                 </div>
-              </div>
-              <div className="text-[10px] text-rose-300/80 text-center font-medium">
-                Click to open & read PDF
+                <div className="space-y-1.5 px-0.5">
+                  <div className="w-full h-1 bg-neutral-600/70 rounded-full" />
+                  <div className="w-4/5 h-1 bg-neutral-600/50 rounded-full" />
+                  <div className="w-5/6 h-1 bg-neutral-600/60 rounded-full" />
+                  <div className="w-2/3 h-1 bg-neutral-600/40 rounded-full" />
+                </div>
+                <div className="text-[9px] text-rose-300/90 text-center font-medium bg-rose-500/10 rounded py-0.5">
+                  Click to open
+                </div>
               </div>
             </div>
           ) : (

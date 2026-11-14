@@ -858,23 +858,6 @@ export const DrivePage: React.FC<DrivePageProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Empty Trash Button (always visible on Trash tab) */}
-            {tab === "trash" && (
-              <button
-                onClick={handleEmptyTrash}
-                disabled={filteredFiles.length === 0 && filteredFolders.length === 0}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition ${
-                  filteredFiles.length > 0 || filteredFolders.length > 0
-                    ? "bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border-rose-500/30 cursor-pointer shadow-sm"
-                    : "opacity-40 text-[#9aa0a6] border-white/10 cursor-not-allowed"
-                }`}
-                title="Empty trash"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Empty trash</span>
-              </button>
-            )}
-
             {/* View Toggle Capsule (✓ ☰ | ⊞) exactly matching screenshot */}
             <div className="flex items-center rounded-full bg-[#1e1f20] border border-[#444746]/60 p-0.5">
             <button

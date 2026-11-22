@@ -15,6 +15,8 @@ interface FileGridProps {
   onDelete: (id: string, isFolder: boolean) => void;
   onRestore?: (id: string, isFolder: boolean) => void;
   onTogglePin?: (folderId: string) => void;
+  onMove?: (id: string, name: string, isFolder: boolean, currentParentId: string | null) => void;
+  onDropItemOnFolder?: (targetFolderId: string, droppedItemId: string, isDroppedFolder: boolean) => void;
 }
 
 export const FileGrid: React.FC<FileGridProps> = ({
@@ -30,6 +32,8 @@ export const FileGrid: React.FC<FileGridProps> = ({
   onDelete,
   onRestore,
   onTogglePin,
+  onMove,
+  onDropItemOnFolder,
 }) => {
   return (
     <div className="space-y-6 pt-1">
@@ -53,6 +57,8 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 onDelete={onDelete}
                 onRestore={onRestore}
                 onTogglePin={onTogglePin}
+                onMove={onMove}
+                onDropItemOnFolder={onDropItemOnFolder}
               />
             ))}
           </div>
@@ -78,6 +84,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 onRename={onRename}
                 onDelete={onDelete}
                 onRestore={onRestore}
+                onMove={onMove}
               />
             ))}
           </div>

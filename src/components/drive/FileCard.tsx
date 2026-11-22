@@ -16,6 +16,7 @@ import {
   RotateCcw,
   Pin,
   PinOff,
+  FolderInput,
 } from "lucide-react";
 import { DriveFile, DriveFolder } from "../../types";
 import { formatBytes, formatDate, getFileCategory } from "../../lib/utils/formatters";
@@ -34,6 +35,8 @@ interface FileCardProps {
   onDelete: (id: string, isFolder: boolean) => void;
   onRestore?: (id: string, isFolder: boolean) => void;
   onTogglePin?: (folderId: string) => void;
+  onMove?: (id: string, name: string, isFolder: boolean, currentParentId: string | null) => void;
+  onDropItemOnFolder?: (targetFolderId: string, droppedItemId: string, isDroppedFolder: boolean) => void;
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
@@ -49,8 +52,11 @@ export const FileCard: React.FC<FileCardProps> = ({
   onDelete,
   onRestore,
   onTogglePin,
+  onMove,
+  onDropItemOnFolder,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [isDragTarget, setIsDragTarget] = useState(false);
 
   const file = isFolder ? null : (item as DriveFile);
   const folder = isFolder ? (item as DriveFolder) : null;
@@ -112,9 +118,60 @@ export const FileCard: React.FC<FileCardProps> = ({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    if (item.isDeleted) return;
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({
+        id: item.id,
+        name: item.name,
+        isFolder,
+      })
+    );
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isFolder || item.isDeleted) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    if (!isDragTarget) setIsDragTarget(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!isFolder) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragTarget(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (!isFolder || item.isDeleted) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragTarget(false);
+
+    const rawData = e.dataTransfer.getData("application/json");
+    if (!rawData) return;
+    try {
+      const data = JSON.parse(rawData);
+      if (data && data.id && onDropItemOnFolder) {
+        onDropItemOnFolder(item.id, data.id, Boolean(data.isFolder));
+      }
+    } catch (err) {
+      console.warn("[FileCard] Drop parse error:", err);
+    }
+  };
+
   return (
     <div
       data-item-id={item.id}
+      draggable={!item.isDeleted}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       onClick={handleCardClick}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -124,7 +181,9 @@ export const FileCard: React.FC<FileCardProps> = ({
       className={`group relative rounded-2xl p-3 transition duration-200 cursor-pointer flex flex-col justify-between ${
         showMenu ? "z-50 overflow-visible" : isFolder ? "overflow-visible" : "overflow-hidden"
       } ${
-        isSelected
+        isDragTarget
+          ? "bg-[#004a77]/60 border-2 border-[#7CB8F8] ring-4 ring-[#7CB8F8]/40 scale-[1.02] shadow-2xl"
+          : isSelected
           ? "bg-[#004a77]/35 border border-[#7CB8F8]/60 ring-2 ring-[#7CB8F8]/40 shadow-lg shadow-black/40"
           : "bg-[#1e1f20] hover:bg-[#282a2c] border border-white/[0.04] hover:border-white/[0.12] hover:shadow-lg"
       }`}
@@ -207,6 +266,21 @@ export const FileCard: React.FC<FileCardProps> = ({
                   <Edit2 className="w-3.5 h-3.5 text-[#9aa0a6] group-hover:text-white" />
                   <span>Rename</span>
                 </button>
+
+                {/* Move option */}
+                {onMove && !item.isDeleted && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      const currentParentId = isFolder ? folder?.parentId || null : file?.folderId || null;
+                      onMove(item.id, item.name, isFolder, currentParentId);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition cursor-pointer group"
+                  >
+                    <FolderInput className="w-3.5 h-3.5 text-[#9aa0a6] group-hover:text-white" />
+                    <span>Move</span>
+                  </button>
+                )}
 
                 {/* Pin to sidebar option for folders */}
                 {isFolder && onTogglePin && !item.isDeleted && (

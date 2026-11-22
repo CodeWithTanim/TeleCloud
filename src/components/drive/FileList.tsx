@@ -16,6 +16,7 @@ import {
   Pin,
   PinOff,
   MoreVertical,
+  FolderInput,
 } from "lucide-react";
 import { DriveFile, DriveFolder } from "../../types";
 import { formatBytes, formatDate, getFileCategory } from "../../lib/utils/formatters";
@@ -33,6 +34,8 @@ interface FileListProps {
   onDelete: (id: string, isFolder: boolean) => void;
   onRestore?: (id: string, isFolder: boolean) => void;
   onTogglePin?: (folderId: string) => void;
+  onMove?: (id: string, name: string, isFolder: boolean, currentParentId: string | null) => void;
+  onDropItemOnFolder?: (targetFolderId: string, droppedItemId: string, isDroppedFolder: boolean) => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({
@@ -48,8 +51,11 @@ export const FileList: React.FC<FileListProps> = ({
   onDelete,
   onRestore,
   onTogglePin,
+  onMove,
+  onDropItemOnFolder,
 }) => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
 
   const getIcon = (item: DriveFile | DriveFolder, isFolder: boolean) => {
     if (isFolder) return <Folder className="w-5 h-5 text-[#9aa0a6] fill-[#9aa0a6]/20 shrink-0" />;
@@ -93,14 +99,59 @@ export const FileList: React.FC<FileListProps> = ({
       {folders.map((f) => {
         const isSelected = selectedIds.includes(f.id);
         const isMenuOpen = activeMenuId === f.id;
+        const isDragOver = dragOverFolderId === f.id;
 
         return (
           <div
             key={f.id}
             data-item-id={f.id}
+            draggable={!f.isDeleted}
+            onDragStart={(e) => {
+              if (f.isDeleted) return;
+              e.dataTransfer.setData(
+                "application/json",
+                JSON.stringify({ id: f.id, name: f.name, isFolder: true })
+              );
+              e.dataTransfer.effectAllowed = "move";
+            }}
+            onDragOver={(e) => {
+              if (f.isDeleted) return;
+              e.preventDefault();
+              e.stopPropagation();
+              e.dataTransfer.dropEffect = "move";
+              if (dragOverFolderId !== f.id) setDragOverFolderId(f.id);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (dragOverFolderId === f.id) setDragOverFolderId(null);
+            }}
+            onDrop={(e) => {
+              if (f.isDeleted) return;
+              e.preventDefault();
+              e.stopPropagation();
+              setDragOverFolderId(null);
+              const rawData = e.dataTransfer.getData("application/json");
+              if (!rawData) return;
+              try {
+                const data = JSON.parse(rawData);
+                if (data && data.id && onDropItemOnFolder) {
+                  onDropItemOnFolder(f.id, data.id, Boolean(data.isFolder));
+                }
+              } catch (err) {
+                console.warn("[FileList] Drop parse error:", err);
+              }
+            }}
             onClick={() => onOpenFolder(f.id)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveMenuId(f.id);
+            }}
             className={`grid grid-cols-12 px-3 sm:px-4 py-2.5 sm:py-3 items-center border-b border-white/[0.04] cursor-pointer transition group relative ${
-              isSelected
+              isDragOver
+                ? "bg-[#004a77]/60 ring-2 ring-[#7CB8F8] scale-[1.005]"
+                : isSelected
                 ? "bg-[#004a77]/35 ring-1 ring-[#7CB8F8]/60"
                 : "hover:bg-[#1e1f20]"
             }`}
@@ -280,6 +331,18 @@ export const FileList: React.FC<FileListProps> = ({
                             <Edit2 className="w-3.5 h-3.5 text-[#9aa0a6]" />
                             <span>Rename</span>
                           </button>
+                          {onMove && !f.isDeleted && (
+                            <button
+                              onClick={() => {
+                                setActiveMenuId(null);
+                                onMove(f.id, f.name, true, f.parentId);
+                              }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition"
+                            >
+                              <FolderInput className="w-3.5 h-3.5 text-[#9aa0a6]" />
+                              <span>Move</span>
+                            </button>
+                          )}
                           {onTogglePin && (
                             <button
                               onClick={() => {
@@ -322,7 +385,21 @@ export const FileList: React.FC<FileListProps> = ({
           <div
             key={file.id}
             data-item-id={file.id}
+            draggable={!file.isDeleted}
+            onDragStart={(e) => {
+              if (file.isDeleted) return;
+              e.dataTransfer.setData(
+                "application/json",
+                JSON.stringify({ id: file.id, name: file.name, isFolder: false })
+              );
+              e.dataTransfer.effectAllowed = "move";
+            }}
             onClick={() => onPreview(file)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveMenuId(file.id);
+            }}
             className={`grid grid-cols-12 px-3 sm:px-4 py-2.5 sm:py-3 items-center border-b border-white/[0.04] cursor-pointer transition group relative ${
               isSelected
                 ? "bg-[#004a77]/35 ring-1 ring-[#7CB8F8]/60"
@@ -486,6 +563,18 @@ export const FileList: React.FC<FileListProps> = ({
                             <Edit2 className="w-3.5 h-3.5 text-[#9aa0a6]" />
                             <span>Rename</span>
                           </button>
+                          {onMove && !file.isDeleted && (
+                            <button
+                              onClick={() => {
+                                setActiveMenuId(null);
+                                onMove(file.id, file.name, false, file.folderId);
+                              }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-left transition"
+                            >
+                              <FolderInput className="w-3.5 h-3.5 text-[#9aa0a6]" />
+                              <span>Move</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               setActiveMenuId(null);

@@ -31,6 +31,7 @@ interface FileState {
   restoreFromTrash: (channelId: string, id: string, isFolder: boolean) => Promise<void>;
   deletePermanently: (channelId: string, id: string, isFolder: boolean) => Promise<void>;
   deleteMultiplePermanently: (channelId: string, ids: string[]) => Promise<void>;
+  moveItem: (channelId: string, id: string, targetFolderId: string | null, isFolder: boolean) => Promise<void>;
   emptyTrash: (channelId: string) => Promise<void>;
 }
 
@@ -325,6 +326,47 @@ export const useFileStore = create<FileState>((set, get) => ({
       if (messagesToDelete.length > 0) {
         await deleteTelegramMessages(channelId, messagesToDelete);
       }
+      await saveDriveIndex(channelId, nextFiles, nextFolders);
+    } finally {
+      set({ isSaving: false });
+    }
+  },
+
+  moveItem: async (channelId: string, id: string, targetFolderId: string | null, isFolder: boolean) => {
+    const { files, folders } = get();
+    let nextFiles = [...files];
+    let nextFolders = [...folders];
+
+    if (isFolder) {
+      // Prevent moving a folder into itself or any of its own descendants
+      if (id === targetFolderId) return;
+      const descendantFolderIds = new Set<string>([id]);
+      let added = true;
+      while (added) {
+        added = false;
+        for (const f of folders) {
+          if (f.parentId && descendantFolderIds.has(f.parentId) && !descendantFolderIds.has(f.id)) {
+            descendantFolderIds.add(f.id);
+            added = true;
+          }
+        }
+      }
+      if (targetFolderId && descendantFolderIds.has(targetFolderId)) {
+        console.warn("[fileStore] Cannot move a folder into its own subfolder.");
+        return;
+      }
+
+      nextFolders = nextFolders.map((f) =>
+        f.id === id ? { ...f, parentId: targetFolderId, updatedAt: Date.now() } : f
+      );
+    } else {
+      nextFiles = nextFiles.map((f) =>
+        f.id === id ? { ...f, folderId: targetFolderId, updatedAt: Date.now() } : f
+      );
+    }
+
+    set({ files: nextFiles, folders: nextFolders, isSaving: true });
+    try {
       await saveDriveIndex(channelId, nextFiles, nextFolders);
     } finally {
       set({ isSaving: false });

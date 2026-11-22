@@ -34,6 +34,7 @@ import { FilePreviewModal } from "../components/drive/FilePreviewModal";
 import { DriveEmptyIllustration } from "../components/drive/DriveEmptyIllustration";
 import { RenameModal } from "../components/common/RenameModal";
 import { ConfirmModal } from "../components/common/ConfirmModal";
+import { MoveModal } from "../components/common/MoveModal";
 import { triggerFileDownload, downloadFolderAsZip } from "../lib/telegram/downloader";
 import { uploadFileToChannel } from "../lib/telegram/uploader";
 import { getFileCategory } from "../lib/utils/formatters";
@@ -69,6 +70,7 @@ export const DrivePage: React.FC<DrivePageProps> = ({
     emptyTrash,
     togglePinFolder,
     addFile,
+    moveItem,
   } = useFileStore();
   const { activeChannel } = useAuthStore();
   const { addTransfer, updateProgress, setStatus } = useTransferStore();
@@ -86,6 +88,12 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   const [customEndDate, setCustomEndDate] = useState<number | null>(null);
   const [canvasContextMenu, setCanvasContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [renameTarget, setRenameTarget] = useState<{ id: string; name: string; isFolder: boolean } | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{
+    id: string;
+    name: string;
+    isFolder: boolean;
+    currentParentId: string | null;
+  } | null>(null);
   const [confirmModalState, setConfirmModalState] = useState<{
     title: string;
     message: string;
@@ -343,6 +351,32 @@ export const DrivePage: React.FC<DrivePageProps> = ({
   const handleTogglePin = (id: string) => {
     if (!activeChannel.id) return;
     togglePinFolder(activeChannel.id, id);
+  };
+
+  const handleOpenMoveModal = (
+    id: string,
+    name: string,
+    isFolder: boolean,
+    currentParentId: string | null
+  ) => {
+    setMoveTarget({ id, name, isFolder, currentParentId });
+  };
+
+  const handleConfirmMove = (targetFolderId: string | null) => {
+    if (!activeChannel.id || !moveTarget) return;
+    moveItem(activeChannel.id, moveTarget.id, targetFolderId, moveTarget.isFolder);
+    setMoveTarget(null);
+  };
+
+  const handleDropItemOnFolder = (
+    targetFolderId: string,
+    droppedItemId: string,
+    isDroppedFolder: boolean
+  ) => {
+    if (!activeChannel.id) return;
+    // Do not allow dropping item onto itself
+    if (targetFolderId === droppedItemId) return;
+    moveItem(activeChannel.id, droppedItemId, targetFolderId, isDroppedFolder);
   };
 
   const handleOpenFolder = (id: string) => {
@@ -771,25 +805,87 @@ export const DrivePage: React.FC<DrivePageProps> = ({
         <div className="flex items-center justify-between mb-3">
           {/* Breadcrumbs or Page Title */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            {tab === "drive" && breadcrumbs.length > 1 ? (
-              breadcrumbs.map((b, i) => (
-                <React.Fragment key={b.id || "root"}>
-                  {i > 0 && <ChevronRight className="w-4 h-4 text-[#9aa0a6]" />}
-                  <button
-                    onClick={() => setCurrentFolderId(b.id)}
-                    className={`flex items-center gap-1 text-lg sm:text-xl font-normal transition rounded-xl px-2 py-1 -ml-1 ${
-                      i === breadcrumbs.length - 1
-                        ? "text-white hover:bg-white/5"
-                        : "text-[#9aa0a6] hover:text-white hover:bg-white/5"
-                    }`}
-                  >
-                    <span>{b.name}</span>
-                    {i === breadcrumbs.length - 1 && (
-                      <ChevronDown className="w-4 h-4 text-[#9aa0a6]" />
+            {(tab === "home" || tab === "drive") && breadcrumbs.length > 1 ? (
+              breadcrumbs.map((b, i) => {
+                const isLast = i === breadcrumbs.length - 1;
+                return (
+                  <React.Fragment key={b.id || "root"}>
+                    {i > 0 && <ChevronRight className="w-4 h-4 text-[#9aa0a6]" />}
+                    {isLast ? (
+                      <div className={`relative ${showDriveMenu ? "z-50" : "z-10"}`}>
+                        <button
+                          onClick={() => setShowDriveMenu(!showDriveMenu)}
+                          className="flex items-center gap-1 text-lg sm:text-xl font-normal transition rounded-xl px-2 py-1 -ml-1 text-white hover:bg-white/5 cursor-pointer"
+                        >
+                          <span>{b.name}</span>
+                          <ChevronDown className="w-4 h-4 text-[#9aa0a6]" />
+                        </button>
+
+                        {showDriveMenu && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setShowDriveMenu(false)}
+                            />
+                            <div className="absolute left-0 top-11 z-50 w-72 bg-[#1e1f20] border border-white/10 rounded-2xl shadow-2xl py-2 text-sm text-[#e3e3e3] animate-in fade-in zoom-in-95 duration-100 select-none">
+                              <button
+                                onClick={() => {
+                                  setShowDriveMenu(false);
+                                  onOpenNewFolder?.();
+                                }}
+                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-3.5">
+                                  <FolderPlus className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+                                  <span className="font-normal text-white">New folder</span>
+                                </div>
+                                <span className="text-xs text-[#9aa0a6] font-mono">Alt+C then F</span>
+                              </button>
+
+                              <div className="my-1.5 border-t border-white/10" />
+
+                              <button
+                                onClick={() => {
+                                  setShowDriveMenu(false);
+                                  onOpenUpload?.();
+                                }}
+                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-3.5">
+                                  <FileUp className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+                                  <span className="font-normal text-white">File upload</span>
+                                </div>
+                                <span className="text-xs text-[#9aa0a6] font-mono">Alt+C then U</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setShowDriveMenu(false);
+                                  onOpenUpload?.();
+                                }}
+                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/10 text-left transition cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-3.5">
+                                  <FolderUp className="w-4.5 h-4.5 text-[#9aa0a6] group-hover:text-white" />
+                                  <span className="font-normal text-white">Folder upload</span>
+                                </div>
+                                <span className="text-xs text-[#9aa0a6] font-mono">Alt+C then I</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setCurrentFolderId(b.id)}
+                        className="flex items-center gap-1 text-lg sm:text-xl font-normal transition rounded-xl px-2 py-1 -ml-1 text-[#9aa0a6] hover:text-white hover:bg-white/5 cursor-pointer"
+                      >
+                        <span>{b.name}</span>
+                      </button>
                     )}
-                  </button>
-                </React.Fragment>
-              ))
+                  </React.Fragment>
+                );
+              })
             ) : (
               <div className={`relative ${showDriveMenu ? "z-50" : "z-10"}`}>
                 <button
@@ -1173,6 +1269,8 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onDelete={handleDelete}
             onRestore={handleRestore}
             onTogglePin={handleTogglePin}
+            onMove={handleOpenMoveModal}
+            onDropItemOnFolder={handleDropItemOnFolder}
           />
         ) : (
           <FileList
@@ -1188,6 +1286,8 @@ export const DrivePage: React.FC<DrivePageProps> = ({
             onDelete={handleDelete}
             onRestore={handleRestore}
             onTogglePin={handleTogglePin}
+            onMove={handleOpenMoveModal}
+            onDropItemOnFolder={handleDropItemOnFolder}
           />
         )}
       </div>
@@ -1358,6 +1458,20 @@ export const DrivePage: React.FC<DrivePageProps> = ({
           isDanger={confirmModalState.isDanger}
           onClose={() => setConfirmModalState(null)}
           onConfirm={confirmModalState.onConfirm}
+        />
+      )}
+
+      {/* Move Destination Modal */}
+      {moveTarget && (
+        <MoveModal
+          isOpen={Boolean(moveTarget)}
+          itemId={moveTarget.id}
+          itemName={moveTarget.name}
+          isFolder={moveTarget.isFolder}
+          folders={folders}
+          currentParentId={moveTarget.currentParentId}
+          onClose={() => setMoveTarget(null)}
+          onConfirm={handleConfirmMove}
         />
       )}
     </div>
